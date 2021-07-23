@@ -29,11 +29,3 @@ def bet9ja_league_path(json) -> Sequence[Mapping[Any, Any]]:
 
     expression = jmespath.compile(search_string)
     return expression.search(json)
-
-
-def bet9ja_find_team(json, team: str) -> Sequence[Mapping[Any, Any]]:
-
-    search_string = '[?contains(&match, {club})]'.format(club=team)
-    print(search_string)
-    expression = jmespath.compile(search_string)
-    return expression.search(json)

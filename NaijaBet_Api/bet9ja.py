@@ -30,24 +30,24 @@ class Bet9ja:
         self.site = "bet9ja"
 
     def get_nations(self, nation: str):
-        
+
         pass
 
     def get_competitions():
         pass
 
     def get_team(self, team):
-        self.get_all_leagues()
+        self.get_all()
 
         def filter_func(data):
             match: str = data["match"]
             if match.lower().find(team.lower()) != -1:
                 return True
             return False
-        
+
         return list(filter(filter_func, self.data))
 
-    def get_league_matches(self, league: Betid = Betid.PREMIERLEAGUE):
+    def get_league(self, league: Betid = Betid.PREMIERLEAGUE):
         """
         Provides access to available league level odds for unplayed matches
 
@@ -66,7 +66,13 @@ class Bet9ja:
             self.data = jsonpaths.bet9ja_league_path(self.rawdata)
             return self.data
 
-    def get_all_leagues(self):
+    def get_all(self):
+        """
+        provides odds for all 1x2 and doublechance markets for all implemented leagues
+
+        Returns:
+            Sequence[Mapping[str, str]]: A lis
+        """
         self.data = []
         for league in Betid:
             self.data += self.get_league_matches(league)
