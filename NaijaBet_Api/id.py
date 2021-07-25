@@ -1,3 +1,4 @@
+
 from enum import Enum
 
 
@@ -8,28 +9,39 @@ endpoints = {
         "live": "https://sports.bet9ja.com/desktop/feapi/PalimpsestLiveAjax/GetLiveEventsV3?v_cache_version=1.164.0.135",  # noqa: E501
         "markets": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetGroupMarketsById?GROUPID=170880",
         "matches": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEvent?EVENTID=137750929&v_cache_version=1.164.0.135",  # noqa: E501
+    },
+    "betking": {
+        "popular": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/mostpopularsports/en/1/5/15/",
+        "leagues": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/{leagueid}/0/0"
     }
+
 }
 
 
 # implement id's as enum
 class Betid(Enum):
-    PREMIERLEAGUE = 170880
-    CHAMPIONSHIP = 170881
-    LEAGUE_ONE = 995354
-    LEAGUE_TWO = 995355
-    BUNDESLIGA = 180923
-    BUNDESLIGA_2 = 180924
-    LALIGA = 180928
-    LIGUE_1 = 950503
-    LIGUE_2 = 958691
+    PREMIERLEAGUE = 170880, 841
+    CHAMPIONSHIP = 170881, 863
+    LEAGUE_ONE = 995354, 909
+    LEAGUE_TWO = 995355, 939
+    BUNDESLIGA = 180923, 1007
+    BUNDESLIGA_2 = 180924, 1025
+    LALIGA = 180928, 1107
+    LIGUE_1 = 950503, 1104
+    LIGUE_2 = 958691, 1179
+    SERIEA = 167856, 3775
 
-    def __init__(self, bet9ja_id):
+    def __init__(self, bet9ja_id, betking_id):
         self.bet9ja_id = bet9ja_id
+        self.betking_id = betking_id
 
     def to_endpoint(self, betting_site):
-        if betting_site == "bet9ja":
+        if betting_site == 'bet9ja':
             endpoint_url = endpoints[betting_site]["leagues"].format(
                 leagueid=self.bet9ja_id
             )
-            return endpoint_url
+        elif betting_site == 'betking':
+            endpoint_url = endpoints[betting_site]["leagues"].format(
+                leagueid=self.betking_id
+            )
+        return endpoint_url

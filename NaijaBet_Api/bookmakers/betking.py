@@ -2,16 +2,33 @@ from pprint import pprint
 import requests
 from NaijaBet_Api.id import Betid
 from NaijaBet_Api.utils import jsonpaths
-from typing import Optional
 
 """
 [summary]
 """
+headers = {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+    "accept-language": "en-US,en;q=0.9",
+    "cache-control": "no-cache",
+    "pragma": "no-cache",
+    "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Google Chrome\";v=\"91\", \"Chromium\";v=\"91\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "same-origin",
+    "sec-fetch-user": "?1",
+    "upgrade-insecure-requests": "1",
+    "referrer": "https://www.betking.com/",
+    "referrerPolicy": "strict-origin-when-cross-origin",
+    "method": "GET",
+    "mode": "cors",
+    "credentials": "include"
+}
 
 
-class Bet9ja:
+class Betking:
     """
-     This class provides access to https://sports.bet9ja.com 's odds data.
+     This class provides access to https://betking.com/sports 's odds data.
 
      it provides a variety of methods to query the endpoints and obtain
      odds data at a competiton and match level.
@@ -21,13 +38,13 @@ class Bet9ja:
     """
 
     session = requests.Session()
-    session.get("https://sports.bet9ja.com")
+    session.get("https://betking.com/sports/s")
 
     def __init__(self) -> None:
         """
         Inits the class
         """
-        self.site = "bet9ja"
+        self.site = "betking"
 
     def get_nations(self, nation: str):
 
@@ -37,15 +54,7 @@ class Bet9ja:
         pass
 
     def get_team(self, team):
-        self.get_all()
-
-        def filter_func(data):
-            match: str = data["match"]
-            if match.lower().find(team.lower()) != -1:
-                return True
-            return False
-
-        return list(filter(filter_func, self.data))
+        pass
 
     def get_league(self, league: Betid = Betid.PREMIERLEAGUE):
         """
@@ -54,17 +63,17 @@ class Bet9ja:
         Returns:
             [type]: [description]
         """
+        print(league.to_endpoint(self.site))
         try:
-            res = Bet9ja.session.get(url=league.to_endpoint(self.site))
+            res = Betking.session.get(url=league.to_endpoint(self.site))
             print(res.status_code)
         except Exception as e:
             pprint(e)
             return
         else:
             self.rawdata = res.json()
-        if self.rawdata["R"] == "OK":
-            self.data = jsonpaths.bet9ja_league_path(self.rawdata)
-            return self.data
+            self.data = jsonpaths.betking_league_path(self.rawdata)
+            pprint(self.data)
 
     def get_all(self):
         """
