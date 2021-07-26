@@ -58,3 +58,32 @@ def betking_league_path(json) -> Sequence[Mapping[Any, Any]]:
 
     expression = jmespath.compile(search_string)
     return expression.search(json)
+
+
+def nairabet_league_path(json) -> Sequence[Mapping[Any, Any]]:
+
+    """
+    An helper function that cleans the endpoint returned json
+
+    Args:
+        json (dict): The json returned from the endpoint
+
+    Returns:
+        json (list(dict)): A list of dicts containing the league data in a more human readable format
+    """
+
+    search_string = ('data[*].{"match": eventName, '
+                     '"league": category3Name, '
+                     '"time": eventStart, '
+                     '"league_id": category3Id, '
+                     '"match_id": eventId, '
+                     '"home": eventGames[0].outcomes[0].outcomeOdds '
+                     '"draw": eventGames[0].outcomes[1].outcomeOdds '
+                     '"away": eventGames[0].outcomes[2].outcomeOdds '
+                     '"home_or_draw": eventGames[1].outcomes[0].outcomeOdds '
+                     '"home_or_away": eventGames[1].outcomes[1].outcomeOdds '
+                     '"draw_or_away": eventGames[1].outcomes[2].outcomeOdds '
+                     '}')
+
+    expression = jmespath.compile(search_string)
+    return expression.search(json)
