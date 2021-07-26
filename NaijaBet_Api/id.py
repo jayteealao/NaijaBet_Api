@@ -13,6 +13,9 @@ endpoints = {
     "betking": {
         "popular": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/mostpopularsports/en/1/5/15/",
         "leagues": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/{leagueid}/0/0"
+    },
+    "nairabet": {
+        "leagues": "https://www.nairabet.com/rest/market/categories/multi/{leagueid}/events"
     }
 
 }
@@ -20,20 +23,21 @@ endpoints = {
 
 # implement id's as enum
 class Betid(Enum):
-    PREMIERLEAGUE = 170880, 841
-    CHAMPIONSHIP = 170881, 863
-    LEAGUE_ONE = 995354, 909
-    LEAGUE_TWO = 995355, 939
-    BUNDESLIGA = 180923, 1007
-    BUNDESLIGA_2 = 180924, 1025
-    LALIGA = 180928, 1107
-    LIGUE_1 = 950503, 1104
-    LIGUE_2 = 958691, 1179
-    SERIEA = 167856, 3775
+    PREMIERLEAGUE = 170880, 841, 135975
+    CHAMPIONSHIP = 170881, 863, 135859
+    LEAGUE_ONE = 995354, 909, 135795
+    LEAGUE_TWO = 995355, 939, 135845
+    BUNDESLIGA = 180923, 1007, 135807
+    BUNDESLIGA_2 = 180924, 1025, 136023
+    LALIGA = 180928, 1107, 136013
+    LIGUE_1 = 950503, 1104, 135922
+    LIGUE_2 = 958691, 1179, 135910
+    SERIEA = 167856, 3775, 135763
 
-    def __init__(self, bet9ja_id, betking_id):
+    def __init__(self, bet9ja_id, betking_id, nairabet_id):
         self.bet9ja_id = bet9ja_id
         self.betking_id = betking_id
+        self.nairabet_id = nairabet_id
 
     def to_endpoint(self, betting_site):
         if betting_site == 'bet9ja':
@@ -43,5 +47,9 @@ class Betid(Enum):
         elif betting_site == 'betking':
             endpoint_url = endpoints[betting_site]["leagues"].format(
                 leagueid=self.betking_id
+            )
+        elif betting_site == 'nairabet':
+            endpoint_url = endpoints[betting_site]["leagues"].format(
+                leagueid=self.nairabet_id
             )
         return endpoint_url
