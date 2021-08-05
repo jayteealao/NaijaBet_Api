@@ -72,7 +72,7 @@ class Betking:
             return
         else:
             self.rawdata = res.json()
-            self.data = jsonpaths.betking_league_path(self.rawdata)
+            self.data = jsonpaths.betking_validator(self.rawdata)
             pprint(self.data)
 
     def get_all(self):

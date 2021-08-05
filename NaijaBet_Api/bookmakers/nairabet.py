@@ -65,7 +65,8 @@ class Nairabet:
             self.rawdata = res.json()
             if self.rawdata['code'] == 200:
                 pprint("ok")
-                self.data = jsonpaths.nairabet_league_path(self.rawdata)
+                self.data = jsonpaths.nairabet_validator(self.rawdata)
+                pprint(self.data)
                 return self.data
 
     def get_all(self):

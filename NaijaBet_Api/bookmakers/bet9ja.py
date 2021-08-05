@@ -63,7 +63,7 @@ class Bet9ja:
         else:
             self.rawdata = res.json()
         if self.rawdata["R"] == "OK":
-            self.data = jsonpaths.bet9ja_league_path(self.rawdata)
+            self.data = jsonpaths.bet9ja_validator(self.rawdata)
             pprint(self.data)
             return self.data
 
