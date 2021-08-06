@@ -1,8 +1,7 @@
-from pprint import pprint
+from NaijaBet_Api.utils.normalizer import bet9ja_match_normalizer
 import requests
 from NaijaBet_Api.id import Betid
 from NaijaBet_Api.utils import jsonpaths
-from typing import Optional
 
 """
 [summary]
@@ -58,13 +57,11 @@ class Bet9ja:
             res = Bet9ja.session.get(url=league.to_endpoint(self.site))
             print(res.status_code)
         except Exception as e:
-            pprint(e)
             return
         else:
             self.rawdata = res.json()
         if self.rawdata["R"] == "OK":
-            self.data = jsonpaths.bet9ja_validator(self.rawdata)
-            pprint(self.data)
+            self.data = bet9ja_match_normalizer(jsonpaths.bet9ja_validator(self.rawdata))
             return self.data
 
     def get_all(self):
@@ -76,5 +73,5 @@ class Bet9ja:
         """
         self.data = []
         for league in Betid:
-            self.data += self.get_league_matches(league)
+            self.data += self.get_league(league)
         return self.data

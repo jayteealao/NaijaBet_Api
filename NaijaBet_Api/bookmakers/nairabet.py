@@ -1,8 +1,7 @@
-from pprint import pp, pprint
+from NaijaBet_Api.utils.normalizer import nairabet_match_normalizer
 import requests
 from NaijaBet_Api.id import Betid
 from NaijaBet_Api.utils import jsonpaths
-from typing import Optional
 
 """
 [summary]
@@ -59,14 +58,11 @@ class Nairabet:
             res = Nairabet.session.get(url=league.to_endpoint(self.site))
             print(res.status_code)
         except Exception as e:
-            pprint(e)
             return
         else:
             self.rawdata = res.json()
             if self.rawdata['code'] == 200:
-                pprint("ok")
-                self.data = jsonpaths.nairabet_validator(self.rawdata)
-                pprint(self.data)
+                self.data = nairabet_match_normalizer(jsonpaths.nairabet_validator(self.rawdata))
                 return self.data
 
     def get_all(self):
@@ -78,5 +74,5 @@ class Nairabet:
         """
         self.data = []
         for league in Betid:
-            self.data += self.get_league_matches(league)
+            self.data += self.get_league(league)
         return self.data

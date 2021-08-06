@@ -1,3 +1,4 @@
+from NaijaBet_Api.utils.normalizer import betking_match_normalizer
 from pprint import pprint
 import requests
 from NaijaBet_Api.id import Betid
@@ -68,12 +69,11 @@ class Betking:
             res = Betking.session.get(url=league.to_endpoint(self.site))
             print(res.status_code)
         except Exception as e:
-            pprint(e)
             return
         else:
             self.rawdata = res.json()
-            self.data = jsonpaths.betking_validator(self.rawdata)
-            pprint(self.data)
+            self.data = betking_match_normalizer(jsonpaths.betking_validator(self.rawdata))
+            return self.data
 
     def get_all(self):
         """
@@ -84,5 +84,5 @@ class Betking:
         """
         self.data = []
         for league in Betid:
-            self.data += self.get_league_matches(league)
+            self.data += self.get_league(league)
         return self.data
