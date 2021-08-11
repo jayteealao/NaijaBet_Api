@@ -5,7 +5,7 @@ description = ""
 authors = ["graphitenerd <jayteealao@gmail.com>"]
 
 packages = [
-    {include = "naijabet_api"}
+    {include = "Naijabet_api"}
 ]
 
 [tool.poetry.dependencies]
