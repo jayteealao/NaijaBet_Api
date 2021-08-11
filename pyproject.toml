@@ -5,7 +5,7 @@ description = ""
 authors = ["graphitenerd <jayteealao@gmail.com>"]
 
 packages = [
-    {include = "Naijabet_api", from="."}
+    {include = "Naijabet_api", from="."},
     {include = "Naijabet_api/**/*.py"}
 ]
 
