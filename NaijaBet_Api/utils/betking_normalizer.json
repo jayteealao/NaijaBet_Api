@@ -91,7 +91,6 @@
     "Tranmere": "Tranmere",
     "Walsall": "Walsall",
     "Brentford": "Brentford",
-
     "Valencia": "Valencia",
     "Villarreal": "Villarreal",
     "Real Valladolid": "Real Valladolid",
@@ -112,7 +111,6 @@
     "Granada": "Granada",
     "Betis": "Real Betis",
     "Alaves": "Deportivo Alaves",
-
     "Parma": "Parma",
     "Inter": "Inter Milan",
     "Spezia": "Spezia",
@@ -133,7 +131,6 @@
     "Napoli": "Napoli",
     "Bologna": "Bologna",
     "Atalanta": "Atalanta",
-
     "Schalke": "Schalke 04",
     "Mainz": "Mainz 05",
     "Bayer Leverkusen": "Bayer Leverkusen",
@@ -153,7 +150,6 @@
     "Cologne": "FC Koln",
     "Werder": "Werder Bremen",
     "Arminia Bielefeld": "Arminia Bielefeld",
-
     "Angers": "SCO Angers",
     "Saint Etienne": "Saint-Etienne",
     "Stade Brest": "Stade Brestois",
@@ -174,10 +170,8 @@
     "Dijon": "Dijon FCO",
     "Lyon": "Olympique Lyonnais",
     "Marseille": "Olympique Marseille",
-
     "Slavia Prague": "Slavia Prague",
     "Dinamo Zagreb": "Dinamo Zagreb",
-
     "VVV Venlo": "VVV Venlo",
     "Groningen": "FC Groningen",
     "Willem II": "Willem II",
@@ -196,7 +190,6 @@
     "Ajax": "Ajax",
     "Emmen": "FC Emmen",
     "RKC Waalwijk": "RKC Waalwijk",
-
     "Rio Ave FC": "Rio Ave",
     "Gil Vicente FC": "Gil Vicente",
     "Porto": "FC Porto",
@@ -216,7 +209,6 @@
     "Portimonense": "Portimonense",
     "Rio Ave": "Rio Ave",
     "Gil Vicente": "Gil Vicente",
-
     "Nacional": "Nacional",
     "Royal Charleroi": "Royal Charleroi",
     "Standard": "Standard Liege",
@@ -236,7 +228,6 @@
     "Waasland-Beveren": "Waasland-Beveren",
     "Anderlecht": "Anderlecht",
     "Royal Mouscron": "Royal Excel Mouscron",
-
     "Ufa": "FC Ufa",
     "Akhmat Grozny": "FC Akhmat",
     "Arsenal Tula": "Arsenal Tula",
@@ -253,7 +244,6 @@
     "Sochi": "PFC Sochi",
     "Spartak Moscow": "Spartak Moscow",
     "Tambov": "Fk Tambov",
-
     "Hatayspor": "Hatayspor",
     "Genclerbirligi": "Genclerbirligi",
     "Goztepespor": "Goztepe",
@@ -275,7 +265,6 @@
     "Konyaspor": "Konyaspor",
     "Galatasaray": "Galatasaray",
     "Kasimpasa": "Kasimpasa",
-
     "Hamilton": "Hamilton Academical",
     "Dundee Utd": "Dundee United",
     "Motherwell": "Motherwell FC",
@@ -288,7 +277,6 @@
     "Aberdeen": "Aberdeen",
     "Rangers": "Rangers",
     "Hibernian": "Hibernian",
-
     "Turkey": "Turkey",
     "Italy": "Italy",
     "Wales": "Wales",
@@ -305,7 +293,6 @@
     "Netherlands": "Netherlands",
     "Austria": "Austria",
     "Ukraine": "Ukraine",
-    
     "Greuther Furth": "Greuther Furth",
     "Bochum": "Bochum",
     "Erzgebirge Aue": "Erzgebirge Aue",
@@ -324,7 +311,6 @@
     "Heidenheim": "Heidenheim",
     "Hansa Rostock": "Hansa Rostock",
     "Paderborn": "Paderborn",
-
     "Real Zaragoza": "Real Zaragoza",
     "UD Ibiza Eivissa": "UD Ibiza Eivissa",
     "Espanyol": "Espanyol",
@@ -347,7 +333,6 @@
     "Mirandes": "Mirandes",
     "FC Cartagena": "FC Cartagena",
     "Almeria": "Almeria",
-    
     "Troyes": "Troyes",
     "Clermont": "Clermont Foot",
     "Caen": "SM Caen",
@@ -369,5 +354,23 @@
     "AS Nancy": "Nancy",
     "Empoli": "Empoli",
     "Salernitana": "Salernitana",
-    "Venezia": "Venezia"
+    "Venezia": "Venezia",
+    "ITA - Serie A": "Serie A",
+    "ITA - Serie B": "Serie B",
+    "GER - Bundesliga": "Bundesliga",
+    "GER - 2 Bundesliga": "2 Bundesliga",
+    "ENG - Premier League": "Premier League",
+    "ENG - Championship": "Championship",
+    "FRA - Ligue 1": "Ligue 1",
+    "FRA - Ligue 2": "Ligue 2",
+    "ENG - League One": "League One",
+    "ENG - League Two": "League Two",
+    "ESP - LaLiga": "La Liga",
+    "ESP - LaLiga 2": "La Liga 2",
+    "Bastia": "SC Bastia",
+    "Nancy": "Nancy",
+    "Pau": "Pau FC",
+    "Grenoble": "Grenoble Foot",
+    "Quevilly Rouen": "Quevilly-Rouen",
+    "Auxerre": "AJ Auxerre"
 }

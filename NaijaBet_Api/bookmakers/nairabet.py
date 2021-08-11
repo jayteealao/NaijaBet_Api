@@ -63,6 +63,7 @@ class Nairabet:
             self.rawdata = res.json()
             if self.rawdata['code'] == 200:
                 self.data = nairabet_match_normalizer(jsonpaths.nairabet_validator(self.rawdata))
+                # self.data = jsonpaths.nairabet_validator(self.rawdata)
                 return self.data
 
     def get_all(self):

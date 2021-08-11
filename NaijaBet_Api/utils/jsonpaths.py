@@ -2,6 +2,7 @@ from typing import Any, Mapping, Sequence
 import jmespath
 from functools import partial
 
+
 bet9ja_search_string = ('D.E[*].{"match": DS, '
                         '"league": GN, '
                         '"time": STARTDATE, '

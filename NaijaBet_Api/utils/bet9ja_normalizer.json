@@ -304,7 +304,7 @@
     "Auxerre": "AJ Auxerre",
     "Ajaccio": "AC Ajaccio",
     "Amiens": "Amiens",
-    "Quevilly-Rouen Metropole": "Quevilly-Rouen Metropole",
+    "Quevilly-Rouen Metropole": "Quevilly-Rouen",
     "USL Dunkerque": "USL Dunkerque",
     "Chamois Niort": "Chamois Niort",
     "Rodez Aveyron": "Rodez Aveyron",
@@ -318,5 +318,18 @@
     "Nancy": "Nancy",
     "Empoli": "Empoli",
     "Salernitana": "Salernitana",
-    "Venezia": "Venezia"
+    "Venezia": "Venezia",
+    "Serie A": "Serie A",
+    "Serie B": "Serie B",
+    "Bundesliga": "Bundesliga",
+    "2 Bundesliga": "2 Bundesliga",
+    "Premier League": "Premier League",
+    "Championship": "Championship",
+    "Ligue 1": "Ligue 1",
+    "Ligue 2": "Ligue 2",
+    "League One": "League One",
+    "League Two": "League Two",
+    "LaLiga": "La Liga",
+    "LaLiga 2": "La Liga 2",
+    "Bastia": "SC Bastia"
 }

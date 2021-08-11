@@ -62,6 +62,7 @@ class Bet9ja:
             self.rawdata = res.json()
         if self.rawdata["R"] == "OK":
             self.data = bet9ja_match_normalizer(jsonpaths.bet9ja_validator(self.rawdata))
+            # self.data = jsonpaths.bet9ja_validator(self.rawdata)
             return self.data
 
     def get_all(self):

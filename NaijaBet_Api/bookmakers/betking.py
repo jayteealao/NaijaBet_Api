@@ -73,6 +73,7 @@ class Betking:
         else:
             self.rawdata = res.json()
             self.data = betking_match_normalizer(jsonpaths.betking_validator(self.rawdata))
+            # self.data = jsonpaths.betking_validator(self.rawdata)
             return self.data
 
     def get_all(self):
