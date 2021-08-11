@@ -1,7 +1,17 @@
-- name: Build and publish to pypi
-  uses: JRubics/poetry-publish@v1.8
-  with:
-    python_version: "3.8"
-    pypi_token: ${{ secrets.PYPI_TOKEN }}
-    repository_name: "NaijaBet_Api"
-    ignore_dev_requirements: "yes"
+name: pytester-cov workflow
+
+on: 
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1.8
+        with:
+          python_version: "3.8"
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
+          repository_name: "NaijaBet_Api"
+          ignore_dev_requirements: "yes"
