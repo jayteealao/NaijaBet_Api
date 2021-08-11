@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "NaijaBet-Api"
+name = "NaijaBet_Api"
 version = "0.2.0"
 description = ""
 authors = ["graphitenerd <jayteealao@gmail.com>"]
