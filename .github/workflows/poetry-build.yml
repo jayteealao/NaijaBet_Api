@@ -1,4 +1,4 @@
-name: pytester-cov workflow
+name: publish-pypi
 
 on: 
   push:
@@ -8,10 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Build and publish to pypi
-        uses: JRubics/poetry-publish@v1.8
+      - uses: actions/setup-python@v1
         with:
-          python_version: "3.8"
-          pypi_token: ${{ secrets.PYPI_TOKEN }}
-          repository_name: "NaijaBet_Api"
-          ignore_dev_requirements: "yes"
+          python-versions: 3.8
+      - name: Install dependencies
+        run: |
+          pip install -U pip
+          pip install poetry
+          poetry install
+        env:
+          POETRY_VIRTUALENVS_CREATE: true
+      - name: Build
+        run: |
+          poetry build
+      - name: publish
+        run: |
+          poetry publish --repository pypi
