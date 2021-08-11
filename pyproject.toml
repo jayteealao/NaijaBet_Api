@@ -4,6 +4,10 @@ version = "0.2.0"
 description = ""
 authors = ["graphitenerd <jayteealao@gmail.com>"]
 
+packages = [
+    {include = "naijabet_api"}
+]
+
 [tool.poetry.dependencies]
 python = "^3.8"
 requests = "^2.25.1"

@@ -17,7 +17,7 @@ jobs:
           pip install poetry
           poetry install
         env:
-          POETRY_VIRTUALENVS_CREATE: true
+          POETRY_VIRTUALENVS_CREATE: false
       - name: Build
         run: |
           poetry build
