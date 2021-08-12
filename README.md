@@ -1,6 +1,6 @@
 # NaijaBet-Api
 
-[![build](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml/badge.svg)](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml)
+[![publish-pypi](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml/badge.svg?branch=release)](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml)
 
 A python library that provides access to the odds data of Nigeria's major betting sites.
 
