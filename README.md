@@ -1,5 +1,7 @@
 # NaijaBet-Api
 
+[![build](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml/badge.svg)](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml)
+
 A python library that provides access to the odds data of Nigeria's major betting sites.
 
 It provides access to Bet9ja, Betking and Nairabet's 1X2 and doublechance soccer odds.
