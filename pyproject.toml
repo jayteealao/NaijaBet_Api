@@ -1,28 +1,6 @@
-[tool.poetry]
-name = "NaijaBet_Api"
-version = "0.2.0"
-description = ""
-authors = ["graphitenerd <jayteealao@gmail.com>"]
-
-packages = [
-    {include = "Naijabet_api", from="."},
-    {include = "Naijabet_api/**/*.py"}
-]
-
-[tool.poetry.dependencies]
-python = "^3.8"
-requests = "^2.25.1"
-coverage = "^5.5"
-black = "^21.7b0"
-jmespath = "^0.10.0"
-arrow = "^1.1.1"
-
-[tool.poetry.dev-dependencies]
-pytest = "^5.2"
-bandit = "^1.7.0"
-flake8 = "^3.9.2"
-autopep8 = "^1.5.7"
-
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
