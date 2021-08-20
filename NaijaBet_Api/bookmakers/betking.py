@@ -7,24 +7,6 @@ from NaijaBet_Api.utils import jsonpaths
 """
 [summary]
 """
-headers = {
-    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-    "accept-language": "en-US,en;q=0.9",
-    "cache-control": "no-cache",
-    "pragma": "no-cache",
-    "sec-ch-ua": "\" Not;A Brand\";v=\"99\", \"Google Chrome\";v=\"91\", \"Chromium\";v=\"91\"",
-    "sec-ch-ua-mobile": "?0",
-    "sec-fetch-dest": "document",
-    "sec-fetch-mode": "navigate",
-    "sec-fetch-site": "same-origin",
-    "sec-fetch-user": "?1",
-    "upgrade-insecure-requests": "1",
-    "referrer": "https://www.betking.com/",
-    "referrerPolicy": "strict-origin-when-cross-origin",
-    "method": "GET",
-    "mode": "cors",
-    "credentials": "include"
-}
 
 
 class Betking:
@@ -64,10 +46,10 @@ class Betking:
         Returns:
             [type]: [description]
         """
-        print(league.to_endpoint(self.site))
+        # print(league.to_endpoint(self.site))
         try:
             res = Betking.session.get(url=league.to_endpoint(self.site))
-            print(res.status_code)
+            # print(res.status_code)
         except Exception as e:
             return
         else:

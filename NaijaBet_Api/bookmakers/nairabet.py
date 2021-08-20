@@ -56,7 +56,7 @@ class Nairabet:
         print(league.to_endpoint(self.site))
         try:
             res = Nairabet.session.get(url=league.to_endpoint(self.site))
-            print(res.status_code)
+            # print(res.status_code)
         except Exception as e:
             return
         else:

@@ -40,9 +40,7 @@ class Bet9ja:
 
         def filter_func(data):
             match: str = data["match"]
-            if match.lower().find(team.lower()) != -1:
-                return True
-            return False
+            return match.lower().find(team.lower()) != -1
 
         return list(filter(filter_func, self.data))
 
@@ -55,7 +53,7 @@ class Bet9ja:
         """
         try:
             res = Bet9ja.session.get(url=league.to_endpoint(self.site))
-            print(res.status_code)
+            # print(res.status_code)
         except Exception as e:
             return
         else:
