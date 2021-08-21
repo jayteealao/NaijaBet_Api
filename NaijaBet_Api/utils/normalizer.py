@@ -6,13 +6,14 @@ from pathlib import Path
 
 def match_normalizer(list, path: str):
     path = Path(__file__).parent / path
+    if list is None:
+        return {}
     data = list[:]
 
     def helper(string):
         with open(path, "r") as f:
             normalizer = json.load(f)
-            res = normalizer[string]
-            return res
+            return normalizer[string]
 
     for event in data:
         teams = event["match"]
