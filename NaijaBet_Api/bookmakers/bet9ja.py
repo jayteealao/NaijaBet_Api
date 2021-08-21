@@ -55,7 +55,8 @@ class Bet9ja:
             res = Bet9ja.session.get(url=league.to_endpoint(self.site))
             # print(res.status_code)
         except Exception as e:
-            return
+            print(e)
+            return {}
         else:
             self.rawdata = res.json()
         if self.rawdata["R"] == "OK":
