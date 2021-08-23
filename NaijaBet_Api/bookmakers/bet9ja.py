@@ -65,7 +65,8 @@ class Bet9ja:
             res = Bet9ja.session.get(url=league.to_endpoint(self.site))
             # print(res.status_code)
         except Exception as e:
-            return
+            print(e)
+            return {}
         else:
             self.rawdata = res.json()
         if self.rawdata["R"] == "OK":
@@ -102,6 +103,8 @@ class Bet9ja:
                 self.data = bet9ja_match_normalizer(jsonpaths.bet9ja_validator(self.rawdata))
                 # self.data = jsonpaths.bet9ja_validator(self.rawdata)
                 return self.data
+            else:
+                return {}
 
     def get_all(self):
         """
@@ -129,8 +132,10 @@ class Bet9ja:
         tasks = []
         async with self.session as session:
             for league in Betid:
-                tasks.append(asyncio.ensure_future(self.async_get_league(league, session)))
+                # tasks.append(asyncio.ensure_future(self.async_get_league(league, session)))
+                tasks.append(self.async_get_league(league, session))
             work = await asyncio.gather(*tasks)
             for league in work:
                 self.data += league
-            return self.data
+            self.data = [dict(member) for member in {tuple(match.items()) for match in self.data}]
+        return self.data
