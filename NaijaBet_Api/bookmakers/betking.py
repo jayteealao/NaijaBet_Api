@@ -57,15 +57,16 @@ class Betking:
         Returns:
             [type]: [description]
         """
-        # print(league.to_endpoint(self.site))
+        print(league.to_endpoint(self.site))
         try:
             res = Betking.session.get(url=league.to_endpoint(self.site))
-            # print(res.status_code)
+            print(res.status_code)
         except Exception as e:
             print(e)
             return {}
         else:
             self.rawdata = res.json()
+            # print(self.rawdata)
             self.data = betking_match_normalizer(jsonpaths.betking_validator(self.rawdata))
             # self.data = jsonpaths.betking_validator(self.rawdata)
             return self.data

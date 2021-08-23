@@ -6,7 +6,6 @@ from pathlib import Path
 
 def match_normalizer(list, path: str):
     path = Path(__file__).parent / path
-    
     if list is None:
         return {}
     data = list[:]
