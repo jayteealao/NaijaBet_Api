@@ -1,10 +1,6 @@
 from NaijaBet_Api.utils.normalizer import nairabet_match_normalizer
-import requests
-from NaijaBet_Api.id import Betid
 from NaijaBet_Api.utils import jsonpaths
 from NaijaBet_Api.bookmakers.BaseClass import BookmakerBaseClass
-import aiohttp
-import asyncio
 
 """
 [summary]

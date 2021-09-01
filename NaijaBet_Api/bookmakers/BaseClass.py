@@ -1,7 +1,6 @@
 from abc import ABCMeta, abstractmethod
 import requests
 from NaijaBet_Api.id import Betid
-from NaijaBet_Api.utils import jsonpaths
 import aiohttp
 import asyncio
 
@@ -62,7 +61,7 @@ class BookmakerBaseClass(metaclass=ABCMeta):
             print(e)
             return {}
         else:
-            # self.data = jsonpaths.nairabet_validator(self.rawdata)
+            # self.data = jsonpaths.nairabet_validator(self.rawdata)    
             return self.normalizer(res.json())
 
     def get_all(self):
@@ -74,13 +73,15 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         """
         self.data = []
         for league in Betid:
+            if self.data == {}:
+                continue
             self.data += self.get_league(league)
         return self.data
 
     async def launch_async(self):
         self.session = self._async_session.ClientSession(connector_owner=False)
-        await self.session.get(self._url)
-        self.launched = True
+        async with self.session.get(self._url):
+            self.launched = True
 
     async def async_get_league(self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession = None):
         """
@@ -95,14 +96,13 @@ class BookmakerBaseClass(metaclass=ABCMeta):
             async_session = self.session
         async with async_session as session:
             try:
-                res = await session.get(url=league.to_endpoint(self.site))
+                async with session.get(url=league.to_endpoint(self.site)) as resp:
+                    return self.normalizer(await resp.json())
                 # print(res.status_code)
+                # self.data = jsonpaths.bet9ja_validator(self.rawdata)
             except Exception as e:
                 print(e)
                 return {}
-            else:
-                # self.data = jsonpaths.bet9ja_validator(self.rawdata)
-                return self.normalizer(await res.json())
 
     async def async_get_all(self):
         """
@@ -114,13 +114,11 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         if not self.launched:
             await self.launch_async()
             self.launched = True
+        work = await asyncio.gather(*[self.async_get_league(league) for league in Betid])
+        # test = [league for league in work if league != {}]
         data = []
-        tasks = []
-        async with self.session as session:
-            for league in Betid:
-                # tasks.append(asyncio.ensure_future(self.async_get_league(league, session)))
-                tasks.append(self.async_get_league(league, session))
-            work = await asyncio.gather(*tasks)
-            for league in work:
-                data += league
+        for league in work:
+            if league == {}:
+                continue
+            data += league
         return [dict(member) for member in {tuple(match.items()) for match in data}]
