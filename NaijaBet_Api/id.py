@@ -6,6 +6,7 @@ from pprint import pprint
 endpoints = {
     "bet9ja": {
         "sports": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetSports?DISP=0&v_cache_version=1.164.0.135",
+    "leaguetry": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInCouponV2?SCHID=492&DISP=0&MKEY=1&v_cache_version=1.169.1.135",
         "leagues": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID={leagueid}&DISP=0&GROUPMARKETID=1&matches=true",  # noqa: E501
         "live": "https://sports.bet9ja.com/desktop/feapi/PalimpsestLiveAjax/GetLiveEventsV3?v_cache_version=1.164.0.135",  # noqa: E501
         "markets": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetGroupMarketsById?GROUPID=170880",

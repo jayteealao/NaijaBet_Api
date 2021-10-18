@@ -20,7 +20,14 @@ class Bet9ja(BookmakerBaseClass):
     """
 
     _site = 'bet9ja'
-    _url = "https://sports.bet9ja.com"
+    _url = "https://bet9ja.com"
+    _headers = {
+        "sec-ch-ua": '"Chromium";v="94", "Microsoft Edge";v="94", ";Not A Brand";v="99"',
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "user-agent": "Chrome/94.0.4606.81",
+        "referer": "https://sports.bet9ja.com",
+    }
 
     def normalizer(self, args):
         return bet9ja_match_normalizer(jsonpaths.bet9ja_validator(args))

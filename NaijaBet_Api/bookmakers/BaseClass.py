@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from email import header
 import requests
 from NaijaBet_Api.id import Betid
 import aiohttp
@@ -16,7 +17,7 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         self.site = self._site
         if session_type == 'blocking':
             self.session = BookmakerBaseClass._session.session()
-            self.session.get(self._url)
+            self.session.get(self._url, headers=self._headers)
 
         else:
             self.launched = False
@@ -31,7 +32,6 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         pass
 
     def get_nations(self, nation: str):
-
         pass
 
     def get_competitions():
@@ -54,8 +54,10 @@ class BookmakerBaseClass(metaclass=ABCMeta):
             [type]: [description]
         """
         # print(league.to_endpoint(self.site))
+        headers = self._headers
+
         try:
-            res = self.session.get(url=league.to_endpoint(self.site))
+            res = self.session.get(url=league.to_endpoint(self.site), headers=headers)
             # print(res.status_code)
         except Exception as e:
             print(e)

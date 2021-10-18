@@ -19,6 +19,7 @@ class Nairabet(BookmakerBaseClass):
     """
     _site = 'nairabet'
     _url = "https://nairabet.com"
+    _headers = {}
 
     def normalizer(self, args):
         return nairabet_match_normalizer(jsonpaths.nairabet_validator(args))

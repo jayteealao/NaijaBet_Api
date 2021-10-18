@@ -33,9 +33,8 @@ def match_normalizer(list, pathstr: str):
                 except KeyError:
                     logger.warning(f"{string} not found in normalizer")
                     res = difflib.get_close_matches(string, map.keys(), 1, 0.8)
-                    logger.info('found possible matches {res}')
+                    logger.warning(f'found possible matches {res}')
                     return map[res[0]]
-
 
     for event in data:
         teams = event["match"]
