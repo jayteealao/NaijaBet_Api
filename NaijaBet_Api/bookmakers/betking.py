@@ -20,6 +20,8 @@ class Betking(BookmakerBaseClass):
 
     _site = 'betking'
     _url = "https://betking.com/sports/s"
+    _headers = {}
+
 
     def normalizer(self, args):
         return betking_match_normalizer(jsonpaths.betking_validator(args))
