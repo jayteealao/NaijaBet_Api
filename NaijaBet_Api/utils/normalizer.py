@@ -37,14 +37,20 @@ def match_normalizer(list, pathstr: str):
                     return map[res[0]]
 
     for event in data:
-        teams = event["match"]
-        home, away = re.split(r"\s-\s", teams, maxsplit=1)
-        home = helper(home.strip())
-        away = helper(away.strip())
-        event["match"] = "{0} - {1}".format(home, away)
-        event["time"] = arrow.get(event["time"]).int_timestamp
-        event['league'] = helper(event['league'])
+        teams = event.get("match", None)
+        if teams is not None:
+            home, away = re.split(r"\s-\s", teams, maxsplit=1)
+            home = helper(home.strip())
+            away = helper(away.strip())
+            event["match"] = "{0} - {1}".format(home, away)
 
+        time = event.get("time", None)
+        if time is not None:
+            event["time"] = arrow.get(event["time"]).int_timestamp
+
+        league = event.get("league", None)
+        if league is not None:
+            event['league'] = helper(event['league'])
     return data
 
 

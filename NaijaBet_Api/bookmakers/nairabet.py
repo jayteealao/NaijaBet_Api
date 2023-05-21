@@ -1,3 +1,4 @@
+from NaijaBet_Api.id import Betid
 from NaijaBet_Api.utils.normalizer import nairabet_match_normalizer
 from NaijaBet_Api.utils import jsonpaths
 from NaijaBet_Api.bookmakers.BaseClass import BookmakerBaseClass
@@ -22,4 +23,12 @@ class Nairabet(BookmakerBaseClass):
     _headers = {}
 
     def normalizer(self, args):
-        return nairabet_match_normalizer(jsonpaths.nairabet_validator(args))
+        match = nairabet_match_normalizer(jsonpaths.nairabet_validator(args))
+        league = nairabet_match_normalizer(jsonpaths.nairabet_league_validator(args))
+        if len(league) > 0:
+            print(league)
+            print(match)
+            for m in match:
+                m["league"] = league[0]["league"]
+                m["league_id"] = league[0]["league_id"]
+        return match

@@ -6,7 +6,7 @@ from pprint import pprint
 endpoints = {
     "bet9ja": {
         "sports": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetSports?DISP=0&v_cache_version=1.164.0.135",
-    "leaguetry": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInCouponV2?SCHID=492&DISP=0&MKEY=1&v_cache_version=1.169.1.135",
+        "leaguetry": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInCouponV2?SCHID=492&DISP=0&MKEY=1&v_cache_version=1.169.1.135",
         "leagues": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID={leagueid}&DISP=0&GROUPMARKETID=1&matches=true",  # noqa: E501
         "live": "https://sports.bet9ja.com/desktop/feapi/PalimpsestLiveAjax/GetLiveEventsV3?v_cache_version=1.164.0.135",  # noqa: E501
         "markets": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetGroupMarketsById?GROUPID=170880",
@@ -17,7 +17,8 @@ endpoints = {
         "leagues": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/{leagueid}/0/0"
     },
     "nairabet": {
-        "leagues": "https://www.nairabet.com/rest/market/categories/multi/{leagueid}/events"
+        "leagues": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&limit=10",
+        "leaguesDNB": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&marketId=DNB&limit=10"
     },
     "sportybet": {
         "leagues": [{"sportId":"sr:sport:1","marketId":"1,18,10,29,11,26,36,14","tournamentId":[[{"sr:tournament:1"}]]}]  # noqa: E231, E501
@@ -28,16 +29,16 @@ endpoints = {
 
 # implement id's as enum
 class Betid(Enum):
-    PREMIERLEAGUE = 170880, 841, 135975, 17
-    CHAMPIONSHIP = 170881, 863, 135859, 18
-    LEAGUE_ONE = 995354, 909, 135795, 24
-    LEAGUE_TWO = 995355, 939, 135845, 25
-    BUNDESLIGA = 180923, 1007, 135807, 35
-    BUNDESLIGA_2 = 180924, 1025, 136023, 44
-    LALIGA = 180928, 1108, 136013, 8
-    LIGUE_1 = 950503, 1104, 135922, 34
-    LIGUE_2 = 958691, 1179, 135910, 182
-    SERIEA = 167856, 3775, 135763, 23
+    PREMIERLEAGUE = 170880, 841, "EN_PR", 17
+    CHAMPIONSHIP = 170881, 863, "EN_CH", 18
+    LEAGUE_ONE = 995354, 909, "EN_L1", 24
+    LEAGUE_TWO = 995355, 939, "EN_L2", 25
+    BUNDESLIGA = 180923, 1007, "DE_BL", 35
+    BUNDESLIGA_2 = 180924, 1025, "DE_B2", 44
+    LALIGA = 180928, 1108, "ES_PL", 8
+    LIGUE_1 = 950503, 1104, "FR_L1", 34
+    LIGUE_2 = 958691, 1179, "FR_L2", 182
+    SERIEA = 167856, 3775, "IT_SA", 23
     # replace betkings laliga id
 
     def __init__(self, bet9ja_id, betking_id, nairabet_id, sportybet_id):
@@ -57,6 +58,10 @@ class Betid(Enum):
             )
         elif betting_site == 'nairabet':
             endpoint_url = endpoints[betting_site]["leagues"].format(
+                leagueid=self.nairabet_id
+            )
+        elif betting_site == 'nairabetDNB':
+            endpoint_url = endpoints[betting_site]["leaguesDNB"].format(
                 leagueid=self.nairabet_id
             )
         elif betting_site == 'sportybet':

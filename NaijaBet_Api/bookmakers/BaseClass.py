@@ -63,7 +63,8 @@ class BookmakerBaseClass(metaclass=ABCMeta):
             print(e)
             return {}
         else:
-            # self.data = jsonpaths.nairabet_validator(self.rawdata)    
+            # self.data = jsonpaths.nairabet_validator(self.rawdata)
+            # print(res.json())
             return self.normalizer(res.json())
 
     def get_all(self):

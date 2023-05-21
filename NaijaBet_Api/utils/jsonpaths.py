@@ -29,18 +29,32 @@ betking_search_string = ('AreaMatches[0].Items[*].{"match": ItemName, '
                          '"draw_or_away": OddsCollection[1].MatchOdds[2].Outcome.OddOutcome '
                          '}')
 
-nairabet_search_string = ('data[*].{"match": eventName, '
-                          '"league": category3Name, '
-                          '"time": eventStart, '
-                          '"league_id": category3Id, '
-                          '"match_id": eventId, '
-                          '"home": eventGames[0].outcomes[0].outcomeOdds '
-                          '"draw": eventGames[0].outcomes[1].outcomeOdds '
-                          '"away": eventGames[0].outcomes[2].outcomeOdds '
-                          '"home_or_draw": eventGames[1].outcomes[0].outcomeOdds '
-                          '"home_or_away": eventGames[1].outcomes[1].outcomeOdds '
-                          '"draw_or_away": eventGames[1].outcomes[2].outcomeOdds '
-                          '}')
+# nairabet_search_string = ('data[*].{"match": eventName, '
+#                           '"league": category3Name, '
+#                           '"time": eventStart, '
+#                           '"league_id": category3Id, '
+#                           '"match_id": eventId, '
+#                           '"home": eventGames[0].outcomes[0].outcomeOdds '
+#                           '"draw": eventGames[0].outcomes[1].outcomeOdds '
+#                           '"away": eventGames[0].outcomes[2].outcomeOdds '
+#                           '"home_or_draw": eventGames[1].outcomes[0].outcomeOdds '
+#                           '"home_or_away": eventGames[1].outcomes[1].outcomeOdds '
+#                           '"draw_or_away": eventGames[1].outcomes[2].outcomeOdds '
+#                           '}')
+
+nairabet_search_string = 'data.categories[0].competitions[0].events[*].{ ' \
+                         '"match": join( \' - \', eventNames), ' \
+                         '"time": startTime ' \
+                         '"match_id": id, ' \
+                         '"home": markets[0].outcomes[0].value, ' \
+                         '"draw": markets[0].outcomes[1].value, ' \
+                         '"away": markets[0].outcomes[2].value ' \
+                         '}'
+
+nairabet_league_search_string = 'data.categories[0].competitions[*].{ ' \
+                                '"league": name, ' \
+                                '"league_id": id ' \
+                                '}'
 
 
 def validator(json, search_string) -> Sequence[Mapping[Any, Any]]:
@@ -62,3 +76,4 @@ def validator(json, search_string) -> Sequence[Mapping[Any, Any]]:
 bet9ja_validator = partial(validator, search_string=bet9ja_search_string)
 betking_validator = partial(validator, search_string=betking_search_string)
 nairabet_validator = partial(validator, search_string=nairabet_search_string)
+nairabet_league_validator = partial(validator, search_string=nairabet_league_search_string)
