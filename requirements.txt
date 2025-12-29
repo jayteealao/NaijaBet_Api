@@ -15,3 +15,6 @@ six==1.16.0
 tomli==1.2.1
 urllib3==1.26.6
 yarl==1.6.3
+pytest>=7.0.0
+pytest-asyncio>=0.18.0
+pytest-timeout>=2.1.0

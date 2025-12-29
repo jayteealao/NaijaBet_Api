@@ -34,7 +34,14 @@ def match_normalizer(list, pathstr: str):
                     logger.warning(f"{string} not found in normalizer")
                     res = difflib.get_close_matches(string, map.keys(), 1, 0.8)
                     logger.warning(f'found possible matches {res}')
-                    return map[res[0]]
+                    if res:
+                        return map[res[0]]
+                    else:
+                        logger.warning(f"No close matches found for {string}, returning original")
+                        return string
+
+    # List of odds fields that should be converted to floats
+    odds_fields = ['home', 'draw', 'away', 'home_or_draw', 'home_or_away', 'draw_or_away']
 
     for event in data:
         teams = event.get("match", None)
@@ -51,6 +58,16 @@ def match_normalizer(list, pathstr: str):
         league = event.get("league", None)
         if league is not None:
             event['league'] = helper(event['league'])
+
+        # Convert odds fields from strings to floats
+        for field in odds_fields:
+            if field in event and event[field] is not None:
+                try:
+                    event[field] = float(event[field])
+                except (ValueError, TypeError):
+                    logger.warning(f"Could not convert {field}={event[field]} to float")
+                    pass
+
     return data
 
 

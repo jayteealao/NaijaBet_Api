@@ -59,13 +59,20 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         try:
             res = self.session.get(url=league.to_endpoint(self.site), headers=headers)
             # print(res.status_code)
+            if res.status_code != 200:
+                print(f"Warning: HTTP {res.status_code} for {self.site}")
+                return []
         except Exception as e:
             print(e)
-            return {}
+            return []
         else:
-            # self.data = jsonpaths.nairabet_validator(self.rawdata)
-            # print(res.json())
-            return self.normalizer(res.json())
+            try:
+                # self.data = jsonpaths.nairabet_validator(self.rawdata)
+                # print(res.json())
+                return self.normalizer(res.json())
+            except Exception as e:
+                print(f"Error parsing JSON for {self.site}: {e}")
+                return []
 
     def get_all(self):
         """
@@ -82,8 +89,12 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         return self.data
 
     async def launch_async(self):
-        self.session = self._async_session.ClientSession(connector_owner=False)
-        async with self.session.get(self._url):
+        self.session = self._async_session.ClientSession()
+        try:
+            async with self.session.get(self._url, headers=self._headers):
+                self.launched = True
+        except Exception as e:
+            print(f"Warning during async session launch: {e}")
             self.launched = True
 
     async def async_get_league(self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession = None):
@@ -117,11 +128,14 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         if not self.launched:
             await self.launch_async()
             self.launched = True
-        work = await asyncio.gather(*[self.async_get_league(league) for league in Betid])
-        # test = [league for league in work if league != {}]
-        data = []
-        for league in work:
-            if league == {}:
-                continue
-            data += league
-        return [dict(member) for member in {tuple(match.items()) for match in data}]
+        try:
+            work = await asyncio.gather(*[self.async_get_league(league) for league in Betid])
+            # test = [league for league in work if league != {}]
+            data = []
+            for league in work:
+                if league == {}:
+                    continue
+                data += league
+            return [dict(member) for member in {tuple(match.items()) for match in data}]
+        finally:
+            await self.session.close()
