@@ -8,40 +8,44 @@ It provides access to Bet9ja, Betking and Nairabet's 1X2 and doublechance soccer
 
 ## Basic Usage
 
-Import the requested bookmaker:
+### Quick Start (Bet9ja & Nairabet)
+
+These work without any additional setup:
 
 ```python
-from NaijaBet_Api.bookmakers import bet9ja, betking, nairabet
-```
-
-Access specific bookmaker
-
-```python
-from NaijaBet_Api.bookmakers import bet9ja
-
-b9 = bet9ja.Bet9ja()
-```
-
-Obtain League data:  
-*note: in order to access a specific league you need to provide the league as an argument via the **Betid Enum Class***
-
-```python
-from NaijaBet_Api.bookmakers import bet9ja
+from NaijaBet_Api.bookmakers import Bet9ja, Nairabet
 from NaijaBet_Api.id import Betid
 
-b9 = bet9ja.Bet9ja()
-b9.get_league(Betid.PREMIERLEAGUE)
+# Initialize
+bet9ja = Bet9ja()
+nairabet = Nairabet()
+
+# Get Premier League odds
+bet9ja_odds = bet9ja.get_league(Betid.PREMIERLEAGUE)
+nairabet_odds = nairabet.get_league(Betid.PREMIERLEAGUE)
+
+# Get all leagues
+all_odds = bet9ja.get_all()
 ```
 
-Obtain all league data:
+### Betking (Requires Playwright)
+
+⚠️ **Betking is protected by Cloudflare** - requires browser automation:
 
 ```python
-from NaijaBet_Api.bookmakers import bet9ja
+# Install first: pip install playwright && playwright install chromium
+
+from NaijaBet_Api.bookmakers import BetkingPlaywright
 from NaijaBet_Api.id import Betid
 
-b9 = bet9ja.Bet9ja()
-b9.get_all()
+# Use context manager (recommended)
+with BetkingPlaywright() as betking:
+    data = betking.get_league(Betid.PREMIERLEAGUE)
+    print(f"Got {len(data)} matches")
 ```
+
+See [`BETKING_BROWSER_AUTOMATION.md`](BETKING_BROWSER_AUTOMATION.md) for complete guide.
+See [`examples/betking_playwright_example.py`](examples/betking_playwright_example.py) for full examples.
 
 The get_all and get_league methods return a list of dicts  
 example:
