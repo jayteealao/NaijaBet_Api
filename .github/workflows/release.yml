@@ -1,0 +1,241 @@
+name: release
+
+on:
+  push:
+    tags: ['v[0-9]*']
+
+permissions:
+  contents: read
+
+# One release at a time. A running release is never cancelled.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PACKAGE: NaijaBet_Api
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: Test
+        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: Check that the tag matches the project version
+        id: version
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PROJECT_VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
+            echo "Tag version $TAG_VERSION does not match pyproject.toml version $PROJECT_VERSION."
+            echo "Run 'make release-pr' to bump the version with git-cliff before tagging."
+            exit 1
+          fi
+          echo "version=$PROJECT_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: uv run python -m build && uv run twine check dist/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  # Inert until the Trusted Publisher is registered on test.pypi.org.
+  # Activate with: gh variable set SDLC_GATE_TEST_PYPI_PUBLISH --body true
+  publish-test-pypi:
+    needs: build
+    if: ${{ vars.SDLC_GATE_TEST_PYPI_PUBLISH == 'true' }}
+    runs-on: ubuntu-latest
+    environment: test-pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      # publish-cmd equivalent: twine upload --repository testpypi dist/*
+      - name: Publish to test.pypi.org
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+  verify-test-pypi:
+    needs: [build, publish-test-pypi]
+    if: ${{ needs.publish-test-pypi.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Install the released version from test.pypi.org in a clean venv
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          MAX_WAIT=900
+          ELAPSED=0
+          python -m venv .smoke
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            if .smoke/bin/pip install --no-cache-dir \
+                 --index-url https://test.pypi.org/simple/ \
+                 --extra-index-url https://pypi.org/simple/ \
+                 "$PACKAGE==$VERSION" \
+               && .smoke/bin/python -c "import NaijaBet_Api; print(NaijaBet_Api.__version__)"; then
+              echo "Check passed"
+              exit 0
+            fi
+            sleep 60
+            ELAPSED=$(( ELAPSED + 60 ))
+          done
+          echo "Check timed out after 15 minutes"
+          exit 1
+
+  # Inert until the Trusted Publisher is registered on pypi.org.
+  # Activate with: gh variable set SDLC_GATE_PYPI_PUBLISH --body true
+  # The GitHub environment `pypi` holds the required-reviewer gate.
+  publish-pypi:
+    needs: [build, verify-test-pypi]
+    if: >-
+      ${{ !cancelled()
+          && needs.build.result == 'success'
+          && needs.verify-test-pypi.result != 'failure'
+          && vars.SDLC_GATE_PYPI_PUBLISH == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/NaijaBet-Api/${{ needs.build.outputs.version }}/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      # publish-cmd equivalent: twine upload dist/*
+      - name: Publish to pypi.org
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: [build, publish-pypi]
+    if: >-
+      ${{ !cancelled()
+          && needs.build.result == 'success'
+          && needs.publish-pypi.result != 'failure' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Render the release notes from the changelog
+        uses: orhun/git-cliff-action@v4
+        id: notes
+        with:
+          config: cliff.toml
+          args: --latest --strip header
+        env:
+          OUTPUT: RELEASE_NOTES.md
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          PRERELEASE_FLAG=""
+          case "$VERSION" in *rc*|*a*|*b*) PRERELEASE_FLAG="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "$PACKAGE $VERSION" \
+            --notes-file RELEASE_NOTES.md \
+            $PRERELEASE_FLAG
+
+  post-publish:
+    needs: [build, publish-pypi, github-release]
+    if: ${{ needs.publish-pypi.result == 'success' }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Wait for propagation
+        run: sleep 300
+      - name: Check registry-api
+        run: |
+          MAX_WAIT=$(( 30 * 60 ))
+          ELAPSED=0
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            if curl -sf "https://pypi.org/pypi/NaijaBet-Api/$VERSION/json" | python -c "import sys,json; d=json.load(sys.stdin); assert d['info']['version']=='$VERSION'"; then
+              echo "Check passed"
+              exit 0
+            fi
+            sleep 60
+            ELAPSED=$(( ELAPSED + 60 ))
+          done
+          echo "Check timed out after 30 minutes"
+          exit 1
+      - name: Check fresh-resolve
+        run: |
+          MAX_WAIT=$(( 30 * 60 ))
+          ELAPSED=0
+          python -m venv .smoke
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            if .smoke/bin/pip install --no-cache-dir "$PACKAGE==$VERSION" && .smoke/bin/python -c "import NaijaBet_Api"; then
+              echo "Check passed"
+              exit 0
+            fi
+            sleep 60
+            ELAPSED=$(( ELAPSED + 60 ))
+          done
+          echo "Check timed out after 30 minutes"
+          exit 1
+      - name: Check github-release
+        run: |
+          MAX_WAIT=$(( 30 * 60 ))
+          ELAPSED=0
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            if [ "$(gh release view "v$VERSION" --json assets --jq '.assets | length')" -ge 2 ]; then
+              echo "Check passed"
+              exit 0
+            fi
+            sleep 60
+            ELAPSED=$(( ELAPSED + 60 ))
+          done
+          echo "Check timed out after 30 minutes"
+          exit 1

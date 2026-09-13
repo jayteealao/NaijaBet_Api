@@ -1,0 +1,42 @@
+name: rollback
+
+# PyPI exposes no CLI or API for yank. Yank the release by hand first:
+#   https://pypi.org/manage/project/NaijaBet-Api/release/<version>/  ->  Options  ->  Yank
+# Then run this workflow. It confirms that every file of the version is yanked and records the rollback.
+# This workflow becomes usable only after it exists on the main branch.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version that was yanked (for example 0.3.1)'
+        required: true
+      reason:
+        description: 'Reason for the rollback'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: pypi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+      - name: Confirm that the version is yanked on pypi.org
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          curl -sf "https://pypi.org/pypi/NaijaBet-Api/$VERSION/json" \
+            | python -c "import sys,json; d=json.load(sys.stdin); files=d['urls']; assert files, 'no files'; assert all(u['yanked'] for u in files), 'not every file is yanked'; print('yanked:', len(files), 'files')"
+      - name: Record the rollback
+        env:
+          VERSION: ${{ inputs.version }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          echo "Rolled back $VERSION: $REASON" >> "$GITHUB_STEP_SUMMARY"
+          echo "Next: fix on main with a conventional commit, run 'make release-pr', merge, then 'make tag'." >> "$GITHUB_STEP_SUMMARY"

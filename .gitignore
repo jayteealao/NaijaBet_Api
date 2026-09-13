@@ -78,7 +78,7 @@ profile_default/
 ipython_config.py
 
 # pyenv
-.python-version
+# .python-version is tracked: it pins the interpreter for uv and CI.
 
 # celery beat schedule file
 celerybeat-schedule
@@ -113,3 +113,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/settings.json
+
+# sdlc-workflow artifacts
+.ai/
