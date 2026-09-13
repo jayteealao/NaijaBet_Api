@@ -9,6 +9,8 @@ import pytest
 from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
 from NaijaBet_Api.id import Betid
 
+pytestmark = pytest.mark.live_site
+
 
 class TestBet9jaE2E:
     """End-to-end tests for Bet9ja bookmaker"""

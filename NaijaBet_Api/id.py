@@ -1,3 +1,4 @@
+import copy
 from enum import Enum
 from pprint import pprint
 
@@ -56,7 +57,7 @@ class Betid(Enum):
         elif betting_site == "nairabetDNB":
             endpoint_url = endpoints[betting_site]["leaguesDNB"].format(leagueid=self.nairabet_id)
         elif betting_site == "sportybet":
-            payload = sportybet_payload
+            payload = copy.deepcopy(sportybet_payload)
             pprint(payload)
             tournament = payload[0]["tournamentId"]
             if isinstance(tournament, list):

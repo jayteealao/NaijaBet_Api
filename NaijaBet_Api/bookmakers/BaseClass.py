@@ -13,19 +13,17 @@ class BookmakerBaseClass(metaclass=ABCMeta):
     _headers: dict[str, str]
     _session = requests
     _async_session = aiohttp
-    session: requests.Session | aiohttp.ClientSession
+    session: requests.Session | aiohttp.ClientSession | None = None
 
     def __init__(self, session_type="blocking") -> None:
         """
         Inits the class
         """
         self.site = self._site
+        self.launched = False
         if session_type == "blocking":
             self.session = BookmakerBaseClass._session.session()
             self.session.get(self._url, headers=self._headers)
-
-        else:
-            self.launched = False
 
     def __init_subclass__(cls, **kwargs) -> None:
         if not hasattr(cls, "_site") or not hasattr(cls, "_url"):

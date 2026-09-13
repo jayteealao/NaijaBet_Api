@@ -10,7 +10,7 @@
 
 ## Run the checks
 
-Run `make check` before you push. It runs the same gates as CI:
+Run `make check` before you push. It runs the format, lint, type-check, and test gates that CI also runs. CI additionally runs `pip-audit`, commit-message linting, and a package-build dry run (`make build`) that `make check` does not cover.
 
 | Gate | Command |
 |---|---|
@@ -46,10 +46,16 @@ When you change a normalizer file under `NaijaBet_Api/utils/`, say so in the "No
 
 ## Release
 
+Before the first release, complete these steps:
+
+1. Register the Trusted Publisher on test.pypi.org for repository workflow `release.yml` and environment `test-pypi`. Register the Trusted Publisher on pypi.org for repository workflow `release.yml` and environment `pypi`.
+2. Run `gh variable set SDLC_GATE_TEST_PYPI_PUBLISH --body true`.
+3. Run `gh variable set SDLC_GATE_PYPI_PUBLISH --body true`.
+
 Maintainers release from `main`:
 
 1. Run `make release-pr`. It computes the next version from the commits since the last tag, updates `pyproject.toml` and `CHANGELOG.md`, and opens a release pull request.
 2. Merge the release pull request.
-3. Run `make tag`. The tag starts the release workflow, which publishes to test.pypi.org, verifies the install, waits for the reviewer approval, publishes to pypi.org, and creates the GitHub release.
+3. Run `make tag`. The tag starts the release workflow, which publishes to test.pypi.org, verifies the install, waits for the reviewer approval, publishes to pypi.org, and creates the GitHub release. Until both `SDLC_GATE_TEST_PYPI_PUBLISH` and `SDLC_GATE_PYPI_PUBLISH` are set, the tag workflow only tests and builds and it publishes nothing.
 
-Recovery steps for known failures are in `docs/runbooks/`.
+Recovery steps for known failures are in `docs/runbooks/`. To yank a bad release, follow `docs/runbooks/bad-release-rollback.md`.

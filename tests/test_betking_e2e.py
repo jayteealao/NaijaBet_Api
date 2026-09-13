@@ -15,12 +15,15 @@ from NaijaBet_Api.bookmakers.betking import Betking
 from NaijaBet_Api.id import Betid
 
 # Mark all Betking tests as expected to fail due to Cloudflare protection
-pytestmark = pytest.mark.xfail(
-    reason="Betking API blocked by Cloudflare bot protection - returns HTTP 403/503. "
-    "Use browser automation (Playwright/Selenium) for production. "
-    "See BETKING_BROWSER_AUTOMATION.md for solutions.",
-    strict=False,  # Don't fail CI/CD if test unexpectedly passes
-)
+pytestmark = [
+    pytest.mark.xfail(
+        reason="Betking API blocked by Cloudflare bot protection - returns HTTP 403/503. "
+        "Use browser automation (Playwright/Selenium) for production. "
+        "See BETKING_BROWSER_AUTOMATION.md for solutions.",
+        strict=False,  # Don't fail CI/CD if test unexpectedly passes
+    ),
+    pytest.mark.live_site,
+]
 
 
 class TestBetkingE2E:
