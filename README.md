@@ -6,6 +6,14 @@ A python library that provides access to the odds data of Nigeria's major bettin
 
 It provides access to Bet9ja, Betking and Nairabet's 1X2 and doublechance soccer odds.
 
+## Requirements
+
+Python 3.10 or later. Python 3.8 and 3.9 are not supported since version 0.3.0.
+
+```
+pip install NaijaBet_Api
+```
+
 ## Basic Usage
 
 ### Quick Start (Bet9ja & Nairabet)
