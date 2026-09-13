@@ -21,7 +21,7 @@ requests==2.34.2
 six==1.16.0
 tomli==1.2.1
 typing_extensions==4.16.0
-urllib3==1.26.6
+urllib3==2.7.0
 yarl==1.24.5
 pytest>=7.0.0
 pytest-asyncio>=0.18.0
