@@ -120,20 +120,19 @@ jobs:
           python -m venv .smoke
           python -c "import tomllib; print('\n'.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))" > deps.txt
           .smoke/bin/pip install --no-cache-dir --index-url https://pypi.org/simple/ -r deps.txt
-          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            if .smoke/bin/pip install --no-cache-dir --no-deps \
-                 --index-url https://test.pypi.org/simple/ \
-                 "$PACKAGE==$VERSION" \
-               && .smoke/bin/pip check \
-               && .smoke/bin/python -c "import NaijaBet_Api; print(NaijaBet_Api.__version__)"; then
-              echo "Check passed"
-              exit 0
+          until .smoke/bin/pip install --no-cache-dir --no-deps \
+                  --index-url https://test.pypi.org/simple/ \
+                  "$PACKAGE==$VERSION"; do
+            if [ "$ELAPSED" -ge "$MAX_WAIT" ]; then
+              echo "Install timed out after 15 minutes"
+              exit 1
             fi
             sleep 60
             ELAPSED=$(( ELAPSED + 60 ))
           done
-          echo "Check timed out after 15 minutes"
-          exit 1
+          .smoke/bin/pip check
+          .smoke/bin/python -c "import NaijaBet_Api; print(NaijaBet_Api.__version__)"
+          echo "Check passed"
 
   # Inert until the Trusted Publisher is registered on pypi.org.
   # Activate with: gh variable set SDLC_GATE_PYPI_PUBLISH --body true
