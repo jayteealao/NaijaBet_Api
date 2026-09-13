@@ -10,7 +10,7 @@ chardet==4.0.0
 charset-normalizer==2.0.4
 colorama==0.4.6
 frozenlist==1.8.0
-idna==3.2
+idna==3.19
 jmespath==0.10.0
 multidict==6.8.0
 packaging==26.3
