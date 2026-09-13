@@ -1,0 +1,42 @@
+# Local git hooks. Install once with: uv run pre-commit install --install-hooks
+# (make setup does this for you.)
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.7
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+  - repo: https://github.com/astral-sh/ty-pre-commit
+    rev: v0.0.80
+    hooks:
+      - id: ty
+        args: [check, NaijaBet_Api]
+        pass_filenames: false
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+        args: [--strict, feat, fix, perf, docs, refactor, build, ci, chore, style, test, revert]
+  - repo: local
+    hooks:
+      - id: pytest-fast
+        name: pytest (fast subset)
+        entry: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py -x
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

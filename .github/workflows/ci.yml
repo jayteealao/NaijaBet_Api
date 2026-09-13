@@ -1,0 +1,130 @@
+name: ci
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: format
+        run: uv run ruff format --check .
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: lint
+        run: uv run ruff check .
+
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: type-check
+        run: uv run ty check NaijaBet_Api
+
+  test-matrix:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: test
+        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py --cov=NaijaBet_Api
+
+  # Single status context for the required check; the matrix jobs report as "test-matrix (x.y)".
+  test:
+    needs: test-matrix
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every matrix leg to pass
+        run: |
+          if [ "${{ needs.test-matrix.result }}" != "success" ]; then
+            echo "test-matrix result: ${{ needs.test-matrix.result }}"
+            exit 1
+          fi
+
+  commit-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint commit messages
+        uses: wagoid/commitlint-github-action@v6
+
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: pip-audit
+        run: uv run pip-audit -r requirements.txt --strict
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dry-run:
+    needs: [format, lint, type-check, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: Publish dry-run
+        run: uv run python -m build && uv run twine check dist/*

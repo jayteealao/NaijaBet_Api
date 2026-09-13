@@ -1,6 +1,6 @@
 # NaijaBet-Api
 
-[![publish-pypi](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml/badge.svg?branch=release)](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/py-build.yml)
+[![ci](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/ci.yml) [![release](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/release.yml/badge.svg)](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/release.yml) [![PyPI](https://img.shields.io/pypi/v/NaijaBet-Api)](https://pypi.org/project/NaijaBet-Api/)
 
 A python library that provides access to the odds data of Nigeria's major betting sites.
 
@@ -55,7 +55,7 @@ with BetkingPlaywright() as betking:
 See [`BETKING_BROWSER_AUTOMATION.md`](BETKING_BROWSER_AUTOMATION.md) for complete guide.
 See [`examples/betking_playwright_example.py`](examples/betking_playwright_example.py) for full examples.
 
-The get_all and get_league methods return a list of dicts  
+The get_all and get_league methods return a list of dicts
 example:
 
 ```json
