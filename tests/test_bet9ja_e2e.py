@@ -2,7 +2,10 @@
 End-to-end tests for Bet9ja bookmaker.
 These tests make real API calls to verify the actual functionality.
 """
+
+import aiohttp
 import pytest
+
 from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
 from NaijaBet_Api.id import Betid
 
@@ -14,7 +17,7 @@ class TestBet9jaE2E:
         """Test that Bet9ja initializes correctly"""
         bookmaker = Bet9ja()
         assert bookmaker is not None
-        assert bookmaker.site == 'bet9ja'
+        assert bookmaker.site == "bet9ja"
         assert bookmaker.session is not None
 
     @pytest.mark.timeout(30)
@@ -30,26 +33,26 @@ class TestBet9jaE2E:
         if len(data) > 0:
             match = data[0]
             # Check required fields exist
-            required_fields = ['match', 'league', 'time', 'league_id', 'match_id']
+            required_fields = ["match", "league", "time", "league_id", "match_id"]
             for field in required_fields:
                 assert field in match, f"Match should have '{field}' field"
 
             # Check that match is a string with " - " separator
-            assert isinstance(match['match'], str), "match should be a string"
-            assert ' - ' in match['match'], "match should contain ' - ' separator"
+            assert isinstance(match["match"], str), "match should be a string"
+            assert " - " in match["match"], "match should contain ' - ' separator"
 
             # Check league is a string
-            assert isinstance(match['league'], str), "league should be a string"
+            assert isinstance(match["league"], str), "league should be a string"
 
             # Check time is an integer timestamp
-            assert isinstance(match['time'], int), "time should be an integer timestamp"
+            assert isinstance(match["time"], int), "time should be an integer timestamp"
 
             # Check IDs are integers
-            assert isinstance(match['league_id'], int), "league_id should be an integer"
-            assert isinstance(match['match_id'], int), "match_id should be an integer"
+            assert isinstance(match["league_id"], int), "league_id should be an integer"
+            assert isinstance(match["match_id"], int), "match_id should be an integer"
 
             # Check odds fields if present
-            odds_fields = ['home', 'draw', 'away', 'home_or_draw', 'home_or_away', 'draw_or_away']
+            odds_fields = ["home", "draw", "away", "home_or_draw", "home_or_away", "draw_or_away"]
             for field in odds_fields:
                 if field in match:
                     assert isinstance(match[field], (int, float)), f"{field} should be numeric"
@@ -85,7 +88,7 @@ class TestBet9jaE2E:
         if len(data) > 0:
             # Validate structure of first match
             match = data[0]
-            required_fields = ['match', 'league', 'time', 'league_id', 'match_id']
+            required_fields = ["match", "league", "time", "league_id", "match_id"]
             for field in required_fields:
                 assert field in match, f"Match should have '{field}' field"
 
@@ -100,13 +103,13 @@ class TestBet9jaE2E:
 
         # If matches found, verify they contain "Arsenal"
         for match in data:
-            assert 'Arsenal' in match['match'], "Match should contain team name"
+            assert "Arsenal" in match["match"], "Match should contain team name"
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(30)
     async def test_async_get_league(self):
         """Test async version of get_league"""
-        bookmaker = Bet9ja(session_type='async')
+        bookmaker = Bet9ja(session_type="async")
         try:
             data = await bookmaker.async_get_league(Betid.PREMIERLEAGUE)
 
@@ -114,17 +117,18 @@ class TestBet9jaE2E:
 
             if isinstance(data, list) and len(data) > 0:
                 match = data[0]
-                assert 'match' in match, "Match should have 'match' field"
-                assert 'league' in match, "Match should have 'league' field"
+                assert "match" in match, "Match should have 'match' field"
+                assert "league" in match, "Match should have 'league' field"
         finally:
-            if hasattr(bookmaker, 'session') and bookmaker.session:
-                await bookmaker.session.close()
+            session = getattr(bookmaker, "session", None)
+            if isinstance(session, aiohttp.ClientSession):
+                await session.close()
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(120)
     async def test_async_get_all(self):
         """Test async version of get_all"""
-        bookmaker = Bet9ja(session_type='async')
+        bookmaker = Bet9ja(session_type="async")
         # async_get_all closes the session, so no need for manual cleanup
         data = await bookmaker.async_get_all()
 
@@ -133,7 +137,7 @@ class TestBet9jaE2E:
         # Should be a list of unique matches
         if len(data) > 0:
             match = data[0]
-            assert 'match' in match, "Match should have 'match' field"
+            assert "match" in match, "Match should have 'match' field"
 
     def test_multiple_requests(self):
         """Test making multiple sequential requests"""

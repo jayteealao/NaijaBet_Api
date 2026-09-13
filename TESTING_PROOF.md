@@ -141,17 +141,21 @@ import requests
 
 # Patch requests to show network activity
 original_get = requests.Session.get
+
+
 def traced_get(self, *args, **kwargs):
-    url = kwargs.get('url') or args[0]
+    url = kwargs.get("url") or args[0]
     print(f"📡 HTTP GET: {url}")
     result = original_get(self, *args, **kwargs)
     print(f"   Status: {result.status_code}, Size: {len(result.content)} bytes")
     return result
 
+
 requests.Session.get = traced_get
 
 # Now run the API call - you'll see real network traffic
 from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
+
 b9 = Bet9ja()
 data = b9.get_league(Betid.PREMIERLEAGUE)
 ```

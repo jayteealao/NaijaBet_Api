@@ -25,6 +25,7 @@ from playwright.sync_api import sync_playwright
 import requests
 import json
 
+
 def get_betking_data_with_browser():
     """
     Use Playwright to get past Cloudflare and fetch Betking data
@@ -32,9 +33,7 @@ def get_betking_data_with_browser():
     with sync_playwright() as p:
         # Launch browser
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-        )
+        context = browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
         page = context.new_page()
 
         # Visit main site to establish session
@@ -52,6 +51,7 @@ def get_betking_data_with_browser():
 
         return data
 
+
 # Use it
 if __name__ == "__main__":
     data = get_betking_data_with_browser()
@@ -65,6 +65,7 @@ from playwright.sync_api import sync_playwright
 from NaijaBet_Api.bookmakers.betking import Betking
 from NaijaBet_Api.id import Betid
 import requests
+
 
 class BetkingWithBrowser(Betking):
     """
@@ -91,11 +92,7 @@ class BetkingWithBrowser(Betking):
             # Extract cookies
             cookies = context.cookies()
             for cookie in cookies:
-                self.session.cookies.set(
-                    cookie['name'],
-                    cookie['value'],
-                    domain=cookie.get('domain', '')
-                )
+                self.session.cookies.set(cookie["name"], cookie["value"], domain=cookie.get("domain", ""))
 
             browser.close()
 
@@ -122,6 +119,7 @@ class BetkingWithBrowser(Betking):
                 browser.close()
                 return []
 
+
 # Usage
 betking = BetkingWithBrowser()
 data = betking.get_league_with_browser(Betid.PREMIERLEAGUE)
@@ -145,12 +143,13 @@ from selenium.webdriver.support.ui import WebDriverWait
 import time
 import requests
 
+
 def get_betking_with_selenium():
     # Set up Chrome options
     chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
     # Launch browser
     driver = webdriver.Chrome(options=chrome_options)
@@ -166,7 +165,7 @@ def get_betking_with_selenium():
         # Create session with cookies
         session = requests.Session()
         for cookie in cookies:
-            session.cookies.set(cookie['name'], cookie['value'])
+            session.cookies.set(cookie["name"], cookie["value"])
 
         # Now use session to fetch API
         api_url = "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/841/0/0"
@@ -176,6 +175,7 @@ def get_betking_with_selenium():
 
     finally:
         driver.quit()
+
 
 # Usage
 data = get_betking_with_selenium()
@@ -229,6 +229,7 @@ from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
 from NaijaBet_Api.bookmakers.nairabet import Nairabet
 from NaijaBet_Api.id import Betid
 
+
 class OddsAggregator:
     """Aggregate odds from multiple providers"""
 
@@ -259,6 +260,7 @@ class OddsAggregator:
         # betking_data = self.betking_with_browser.get_league(league)
 
         return all_odds
+
 
 # Usage
 aggregator = OddsAggregator()

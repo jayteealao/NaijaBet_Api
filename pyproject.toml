@@ -40,6 +40,7 @@ Changelog = "https://github.com/jayteealao/NaijaBet_Api/blob/main/CHANGELOG.md"
 dev = [
     "build>=1.6",
     "pip-audit>=2.10",
+    "playwright>=1.62.0",
     "pre-commit>=4.6",
     "pytest>=8.4",
     "pytest-asyncio>=1.0",

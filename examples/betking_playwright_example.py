@@ -15,11 +15,10 @@ Requirements:
 Author: NaijaBet API
 """
 
-from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
 from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
+from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
 from NaijaBet_Api.bookmakers.nairabet import Nairabet
 from NaijaBet_Api.id import Betid
-import json
 
 
 def example_1_basic_usage():
@@ -39,12 +38,12 @@ def example_1_basic_usage():
 
             if data:
                 # Display first match
-                print(f"\n📋 First match:")
+                print("\n📋 First match:")
                 print(f"   {data[0]['match']}")
                 print(f"   Home: {data[0].get('home')} | Draw: {data[0].get('draw')} | Away: {data[0].get('away')}")
 
                 # Display all matches
-                print(f"\n📋 All Premier League matches:")
+                print("\n📋 All Premier League matches:")
                 for i, match in enumerate(data, 1):
                     print(f"   {i}. {match['match']}")
 
@@ -121,7 +120,7 @@ def example_4_compare_bookmakers():
             nairabet_data = nairabet.get_league(Betid.PREMIERLEAGUE)
             betking_data = betking.get_league(Betid.PREMIERLEAGUE)
 
-            print(f"\nResults:")
+            print("\nResults:")
             print(f"   Bet9ja: {len(bet9ja_data)} matches")
             print(f"   Nairabet: {len(nairabet_data)} matches")
             print(f"   Betking (Playwright): {len(betking_data)} matches")
@@ -129,9 +128,12 @@ def example_4_compare_bookmakers():
             # Compare odds for first match
             if bet9ja_data and nairabet_data and betking_data:
                 print(f"\n📊 Odds comparison for: {bet9ja_data[0]['match']}")
-                print(f"   Bet9ja:    {bet9ja_data[0].get('home')} / {bet9ja_data[0].get('draw')} / {bet9ja_data[0].get('away')}")
-                print(f"   Nairabet:  {nairabet_data[0].get('home')} / {nairabet_data[0].get('draw')} / {nairabet_data[0].get('away')}")
-                print(f"   Betking:   {betking_data[0].get('home')} / {betking_data[0].get('draw')} / {betking_data[0].get('away')}")
+                odds = bet9ja_data[0]
+                print(f"   Bet9ja:    {odds.get('home')} / {odds.get('draw')} / {odds.get('away')}")
+                odds = nairabet_data[0]
+                print(f"   Nairabet:  {odds.get('home')} / {odds.get('draw')} / {odds.get('away')}")
+                odds = betking_data[0]
+                print(f"   Betking:   {odds.get('home')} / {odds.get('draw')} / {odds.get('away')}")
 
     except Exception as e:
         print(f"❌ Error: {e}")
@@ -187,12 +189,12 @@ def example_6_get_all_leagues():
             # Group by league
             leagues = {}
             for match in all_data:
-                league = match.get('league', 'Unknown')
+                league = match.get("league", "Unknown")
                 if league not in leagues:
                     leagues[league] = []
                 leagues[league].append(match)
 
-            print(f"\n📊 Matches by league:")
+            print("\n📊 Matches by league:")
             for league, matches in leagues.items():
                 print(f"   {league}: {len(matches)} matches")
 

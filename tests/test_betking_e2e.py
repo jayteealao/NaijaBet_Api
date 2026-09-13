@@ -8,17 +8,18 @@ to fail) to document this known issue.
 
 For production use, see BETKING_BROWSER_AUTOMATION.md for browser automation solutions.
 """
+
 import pytest
+
 from NaijaBet_Api.bookmakers.betking import Betking
 from NaijaBet_Api.id import Betid
-
 
 # Mark all Betking tests as expected to fail due to Cloudflare protection
 pytestmark = pytest.mark.xfail(
     reason="Betking API blocked by Cloudflare bot protection - returns HTTP 403/503. "
-           "Use browser automation (Playwright/Selenium) for production. "
-           "See BETKING_BROWSER_AUTOMATION.md for solutions.",
-    strict=False  # Don't fail CI/CD if test unexpectedly passes
+    "Use browser automation (Playwright/Selenium) for production. "
+    "See BETKING_BROWSER_AUTOMATION.md for solutions.",
+    strict=False,  # Don't fail CI/CD if test unexpectedly passes
 )
 
 
@@ -33,7 +34,7 @@ class TestBetkingE2E:
         """Test that Betking initializes correctly"""
         bookmaker = Betking()
         assert bookmaker is not None
-        assert bookmaker.site == 'betking'
+        assert bookmaker.site == "betking"
         assert bookmaker.session is not None
 
     @pytest.mark.timeout(30)
@@ -49,19 +50,19 @@ class TestBetkingE2E:
 
         # Validate structure (won't reach here due to Cloudflare)
         match = data[0]
-        required_fields = ['match', 'league', 'time', 'league_id', 'match_id']
+        required_fields = ["match", "league", "time", "league_id", "match_id"]
         for field in required_fields:
             assert field in match, f"Match should have '{field}' field"
 
-        assert isinstance(match['match'], str), "match should be a string"
-        assert ' - ' in match['match'], "match should contain ' - ' separator"
-        assert isinstance(match['league'], str), "league should be a string"
-        assert isinstance(match['time'], int), "time should be an integer timestamp"
-        assert isinstance(match['league_id'], int), "league_id should be an integer"
-        assert isinstance(match['match_id'], int), "match_id should be an integer"
+        assert isinstance(match["match"], str), "match should be a string"
+        assert " - " in match["match"], "match should contain ' - ' separator"
+        assert isinstance(match["league"], str), "league should be a string"
+        assert isinstance(match["time"], int), "time should be an integer timestamp"
+        assert isinstance(match["league_id"], int), "league_id should be an integer"
+        assert isinstance(match["match_id"], int), "match_id should be an integer"
 
         # Check odds fields if present
-        odds_fields = ['home', 'draw', 'away', 'home_or_draw', 'home_or_away', 'draw_or_away']
+        odds_fields = ["home", "draw", "away", "home_or_draw", "home_or_away", "draw_or_away"]
         for field in odds_fields:
             if field in match:
                 assert isinstance(match[field], (int, float)), f"{field} should be numeric"
@@ -105,7 +106,7 @@ class TestBetkingE2E:
 
         # Validate structure
         match = data[0]
-        required_fields = ['match', 'league', 'time', 'league_id', 'match_id']
+        required_fields = ["match", "league", "time", "league_id", "match_id"]
         for field in required_fields:
             assert field in match, f"Match should have '{field}' field"
 
@@ -120,13 +121,13 @@ class TestBetkingE2E:
 
         # Verify they contain "Manchester"
         for match in data:
-            assert 'Manchester' in match['match'], "Match should contain team name"
+            assert "Manchester" in match["match"], "Match should contain team name"
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(30)
     async def test_async_get_league(self):
         """Test async version of get_league"""
-        bookmaker = Betking(session_type='async')
+        bookmaker = Betking(session_type="async")
         data = await bookmaker.async_get_league(Betid.PREMIERLEAGUE)
 
         assert isinstance(data, (list, dict)), "async_get_league should return a list or dict"
@@ -136,21 +137,21 @@ class TestBetkingE2E:
         else:
             assert len(data) > 0, "Expected match data (Cloudflare blocked)"
             match = data[0]
-            assert 'match' in match, "Match should have 'match' field"
-            assert 'league' in match, "Match should have 'league' field"
+            assert "match" in match, "Match should have 'match' field"
+            assert "league" in match, "Match should have 'league' field"
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(120)
     async def test_async_get_all(self):
         """Test async version of get_all"""
-        bookmaker = Betking(session_type='async')
+        bookmaker = Betking(session_type="async")
         data = await bookmaker.async_get_all()
 
         assert isinstance(data, list), "async_get_all should return a list"
         assert len(data) > 0, "Expected match data (Cloudflare blocked)"
 
         match = data[0]
-        assert 'match' in match, "Match should have 'match' field"
+        assert "match" in match, "Match should have 'match' field"
 
     def test_multiple_requests(self):
         """Test making multiple sequential requests"""
@@ -177,8 +178,8 @@ class TestBetkingE2E:
 
         match = data[0]
         # Check format is correct after normalization
-        assert ' - ' in match['match'], "Match should have normalized format with ' - '"
-        teams = match['match'].split(' - ')
+        assert " - " in match["match"], "Match should have normalized format with ' - '"
+        teams = match["match"].split(" - ")
         assert len(teams) == 2, "Match should have exactly 2 teams"
         assert len(teams[0].strip()) > 0, "Home team should not be empty"
         assert len(teams[1].strip()) > 0, "Away team should not be empty"

@@ -13,6 +13,7 @@ from .nairabet import Nairabet
 # Playwright version (optional - only if playwright installed)
 try:
     from .betking_playwright import BetkingPlaywright
-    __all__ = ['Bet9ja', 'Betking', 'Nairabet', 'BetkingPlaywright']
+
+    __all__ = ["Bet9ja", "Betking", "Nairabet", "BetkingPlaywright"]
 except ImportError:
-    __all__ = ['Bet9ja', 'Betking', 'Nairabet']
+    __all__ = ["Bet9ja", "Betking", "Nairabet"]
