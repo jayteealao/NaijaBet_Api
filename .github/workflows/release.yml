@@ -109,6 +109,8 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version-file: .python-version
+      # Never combine test.pypi.org and pypi.org in one pip call: pip picks the highest version
+      # across every index, and test.pypi.org hosts arbitrary names (dependency confusion).
       - name: Install the released version from test.pypi.org in a clean venv
         env:
           VERSION: ${{ needs.build.outputs.version }}
@@ -116,11 +118,13 @@ jobs:
           MAX_WAIT=900
           ELAPSED=0
           python -m venv .smoke
+          python -c "import tomllib; print('\n'.join(tomllib.load(open('pyproject.toml', 'rb'))['project']['dependencies']))" > deps.txt
+          .smoke/bin/pip install --no-cache-dir --index-url https://pypi.org/simple/ -r deps.txt
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            if .smoke/bin/pip install --no-cache-dir \
+            if .smoke/bin/pip install --no-cache-dir --no-deps \
                  --index-url https://test.pypi.org/simple/ \
-                 --extra-index-url https://pypi.org/simple/ \
                  "$PACKAGE==$VERSION" \
+               && .smoke/bin/pip check \
                && .smoke/bin/python -c "import NaijaBet_Api; print(NaijaBet_Api.__version__)"; then
               echo "Check passed"
               exit 0
