@@ -20,7 +20,7 @@ repos:
     rev: v0.0.80
     hooks:
       - id: ty
-        args: [check, NaijaBet_Api]
+        args: []
         pass_filenames: false
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
