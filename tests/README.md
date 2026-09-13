@@ -143,8 +143,8 @@ During the creation of these tests, several bugs in the codebase were discovered
 ## Dependencies
 
 The tests require:
-- pytest >= 7.0.0
-- pytest-asyncio >= 0.18.0
+- pytest >= 8.4
+- pytest-asyncio >= 1.0
 - pytest-timeout >= 2.1.0
 
 Install with:
