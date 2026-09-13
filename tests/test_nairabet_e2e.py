@@ -8,6 +8,8 @@ import pytest
 from NaijaBet_Api.bookmakers.nairabet import Nairabet
 from NaijaBet_Api.id import Betid
 
+pytestmark = pytest.mark.live_site
+
 
 class TestNairabetE2E:
     """End-to-end tests for Nairabet bookmaker"""
