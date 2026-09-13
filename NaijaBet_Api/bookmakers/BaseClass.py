@@ -1,21 +1,26 @@
-from abc import ABCMeta, abstractmethod
-from email import header
-import requests
-from NaijaBet_Api.id import Betid
-import aiohttp
 import asyncio
+from abc import ABCMeta, abstractmethod
+
+import aiohttp
+import requests
+
+from NaijaBet_Api.id import Betid
 
 
 class BookmakerBaseClass(metaclass=ABCMeta):
+    _site: str
+    _url: str
+    _headers: dict[str, str]
     _session = requests
     _async_session = aiohttp
+    session: requests.Session | aiohttp.ClientSession
 
-    def __init__(self, session_type='blocking') -> None:
+    def __init__(self, session_type="blocking") -> None:
         """
         Inits the class
         """
         self.site = self._site
-        if session_type == 'blocking':
+        if session_type == "blocking":
             self.session = BookmakerBaseClass._session.session()
             self.session.get(self._url, headers=self._headers)
 
@@ -23,12 +28,12 @@ class BookmakerBaseClass(metaclass=ABCMeta):
             self.launched = False
 
     def __init_subclass__(cls, **kwargs) -> None:
-        if not hasattr(cls, '_site') or not hasattr(cls, '_url'):
+        if not hasattr(cls, "_site") or not hasattr(cls, "_url"):
             raise NotImplementedError
         return super().__init_subclass__(**kwargs)
 
     @abstractmethod
-    def normalizer(self):
+    def normalizer(self, data):
         pass
 
     def get_nations(self, nation: str):
@@ -55,9 +60,13 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         """
         # print(league.to_endpoint(self.site))
         headers = self._headers
+        session = self.session
+        if not isinstance(session, requests.Session):
+            print(f"Warning: {self.site} has no blocking session; construct with session_type='blocking'")
+            return []
 
         try:
-            res = self.session.get(url=league.to_endpoint(self.site), headers=headers)
+            res = session.get(url=league.to_endpoint(self.site), headers=headers)
             # print(res.status_code)
             if res.status_code != 200:
                 print(f"Warning: HTTP {res.status_code} for {self.site}")
@@ -97,7 +106,9 @@ class BookmakerBaseClass(metaclass=ABCMeta):
             print(f"Warning during async session launch: {e}")
             self.launched = True
 
-    async def async_get_league(self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession = None):
+    async def async_get_league(
+        self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession | None = None
+    ):
         """
         Provides access to available league level odds for unplayed matches
 
@@ -106,7 +117,10 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         """
         if not self.launched:
             await self.launch_async()
-        if not async_session:
+        if async_session is None:
+            if not isinstance(self.session, aiohttp.ClientSession):
+                print(f"Warning: {self.site} has no async session; construct with session_type='async'")
+                return {}
             async_session = self.session
         async with async_session as session:
             try:
@@ -138,4 +152,5 @@ class BookmakerBaseClass(metaclass=ABCMeta):
                 data += league
             return [dict(member) for member in {tuple(match.items()) for match in data}]
         finally:
-            await self.session.close()
+            if isinstance(self.session, aiohttp.ClientSession):
+                await self.session.close()

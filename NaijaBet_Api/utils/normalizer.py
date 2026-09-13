@@ -1,9 +1,11 @@
+import difflib
 import json
 import re
-from typing import ChainMap
-import arrow
+from collections import ChainMap
 from pathlib import Path
-import difflib
+
+import arrow
+
 from NaijaBet_Api.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -27,13 +29,14 @@ def match_normalizer(list, pathstr: str):
                 path_nb = Path(__file__).parent / "nairabet_normalizer.json"
 
                 map = ChainMap(
-                    json.load(open(path_b9, "r")), json.load(open(path_bk, "r")), json.load(open(path_nb, "r")))
+                    json.load(open(path_b9, "r")), json.load(open(path_bk, "r")), json.load(open(path_nb, "r"))
+                )
                 try:
                     return map[string]
                 except KeyError:
                     logger.warning(f"{string} not found in normalizer")
                     res = difflib.get_close_matches(string, map.keys(), 1, 0.8)
-                    logger.warning(f'found possible matches {res}')
+                    logger.warning(f"found possible matches {res}")
                     if res:
                         return map[res[0]]
                     else:
@@ -41,7 +44,7 @@ def match_normalizer(list, pathstr: str):
                         return string
 
     # List of odds fields that should be converted to floats
-    odds_fields = ['home', 'draw', 'away', 'home_or_draw', 'home_or_away', 'draw_or_away']
+    odds_fields = ["home", "draw", "away", "home_or_draw", "home_or_away", "draw_or_away"]
 
     for event in data:
         teams = event.get("match", None)
@@ -57,7 +60,7 @@ def match_normalizer(list, pathstr: str):
 
         league = event.get("league", None)
         if league is not None:
-            event['league'] = helper(event['league'])
+            event["league"] = helper(event["league"])
 
         # Convert odds fields from strings to floats
         for field in odds_fields:

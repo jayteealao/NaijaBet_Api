@@ -15,11 +15,12 @@ Usage:
     print(f"Got {len(data)} matches")
 """
 
-from playwright.sync_api import sync_playwright, Browser, BrowserContext, Page
+from typing import Any, Dict, List, Optional
+
+from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
+
 from NaijaBet_Api.bookmakers.betking import Betking
 from NaijaBet_Api.id import Betid
-from typing import List, Dict, Any, Optional
-import json
 
 
 class BetkingPlaywright(Betking):
@@ -72,27 +73,30 @@ class BetkingPlaywright(Betking):
         self.browser = self.playwright.chromium.launch(
             headless=self.headless,
             args=[
-                '--disable-blink-features=AutomationControlled',
-                '--disable-dev-shm-usage',
-                '--no-sandbox',
-            ]
+                "--disable-blink-features=AutomationControlled",
+                "--disable-dev-shm-usage",
+                "--no-sandbox",
+            ],
         )
 
         # Create context with realistic browser fingerprint
         self.context = self.browser.new_context(
-            viewport={'width': 1920, 'height': 1080},
-            user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            locale='en-US',
-            timezone_id='America/New_York',
+            viewport={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36",
+            locale="en-US",
+            timezone_id="America/New_York",
         )
 
         # Set extra headers
-        self.context.set_extra_http_headers({
-            'Accept': 'application/json, text/plain, */*',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Referer': 'https://betking.com/',
-        })
+        self.context.set_extra_http_headers(
+            {
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Accept-Encoding": "gzip, deflate, br",
+                "Referer": "https://betking.com/",
+            }
+        )
 
         # Create page
         self.page = self.context.new_page()
@@ -100,7 +104,7 @@ class BetkingPlaywright(Betking):
 
         # Visit main site to establish session and get past Cloudflare
         print("Loading Betking site...")
-        self.page.goto('https://betking.com/sports', wait_until='networkidle')
+        self.page.goto("https://betking.com/sports", wait_until="networkidle")
         print("Browser session established")
 
     def _stop_browser(self):
@@ -139,6 +143,8 @@ class BetkingPlaywright(Betking):
             print(f"Fetching: {api_url}")
 
             # Use browser's request context to fetch API
+            if self.page is None:
+                raise RuntimeError("Browser page is not started; call _start_browser() first")
             response = self.page.request.get(api_url)
 
             if response.status != 200:

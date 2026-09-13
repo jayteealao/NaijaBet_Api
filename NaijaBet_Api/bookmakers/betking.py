@@ -1,6 +1,6 @@
 from NaijaBet_Api.bookmakers.BaseClass import BookmakerBaseClass
-from NaijaBet_Api.utils.normalizer import betking_match_normalizer
 from NaijaBet_Api.utils import jsonpaths
+from NaijaBet_Api.utils.normalizer import betking_match_normalizer
 
 """
 [summary]
@@ -18,10 +18,11 @@ class Betking(BookmakerBaseClass):
         session: holds a requests session object for the class as a static variable.
     """
 
-    _site = 'betking'
+    _site = "betking"
     _url = "https://betking.com/sports/s"
     _headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
         "Accept-Encoding": "gzip, deflate, br",
@@ -34,6 +35,5 @@ class Betking(BookmakerBaseClass):
         "sec-fetch-site": "same-site",
     }
 
-
-    def normalizer(self, args):
-        return betking_match_normalizer(jsonpaths.betking_validator(args))
+    def normalizer(self, data):
+        return betking_match_normalizer(jsonpaths.betking_validator(data))

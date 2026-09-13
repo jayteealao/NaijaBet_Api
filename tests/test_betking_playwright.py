@@ -8,11 +8,13 @@ Installation:
     pip install playwright
     playwright install chromium
 """
+
 import pytest
 
 try:
     from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
     from NaijaBet_Api.id import Betid
+
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -27,7 +29,7 @@ class TestBetkingPlaywright:
         """Test that BetkingPlaywright initializes correctly"""
         betking = BetkingPlaywright(headless=True)
         assert betking is not None
-        assert betking.site == 'betking'
+        assert betking.site == "betking"
         assert betking.headless is True
 
     @pytest.mark.timeout(60)
@@ -53,17 +55,17 @@ class TestBetkingPlaywright:
 
             # Validate structure
             match = data[0]
-            required_fields = ['match', 'league', 'time', 'league_id', 'match_id']
+            required_fields = ["match", "league", "time", "league_id", "match_id"]
             for field in required_fields:
                 assert field in match, f"Match should have '{field}' field"
 
             # Check data types
-            assert isinstance(match['match'], str)
-            assert ' - ' in match['match']
-            assert isinstance(match['time'], int)
+            assert isinstance(match["match"], str)
+            assert " - " in match["match"]
+            assert isinstance(match["time"], int)
 
             # Check odds if present
-            odds_fields = ['home', 'draw', 'away']
+            odds_fields = ["home", "draw", "away"]
             for field in odds_fields:
                 if field in match:
                     assert isinstance(match[field], (int, float))
@@ -100,7 +102,7 @@ class TestBetkingPlaywright:
             assert isinstance(data, list)
             # Verify matches contain the team name
             for match in data:
-                assert 'Manchester' in match['match']
+                assert "Manchester" in match["match"]
 
     @pytest.mark.timeout(90)
     def test_manual_browser_management(self):

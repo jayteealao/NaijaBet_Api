@@ -1,7 +1,5 @@
-
 from enum import Enum
 from pprint import pprint
-
 
 endpoints = {
     "bet9ja": {
@@ -14,17 +12,18 @@ endpoints = {
     },
     "betking": {
         "popular": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/mostpopularsports/en/1/5/15/",
-        "leagues": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/{leagueid}/0/0"
+        "leagues": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/{leagueid}/0/0",
     },
     "nairabet": {
         "leagues": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&limit=10",
-        "leaguesDNB": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&marketId=DNB&limit=10"
+        "leaguesDNB": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&marketId=DNB&limit=10",
     },
-    "sportybet": {
-        "leagues": [{"sportId":"sr:sport:1","marketId":"1,18,10,29,11,26,36,14","tournamentId":[[{"sr:tournament:1"}]]}]  # noqa: E231, E501
-    }
-
 }
+
+# Sportybet takes a request payload instead of a URL template; to_endpoint patches the tournament id in.
+sportybet_payload = [
+    {"sportId": "sr:sport:1", "marketId": "1,18,10,29,11,26,36,14", "tournamentId": [["sr:tournament:1"]]}
+]
 
 
 # implement id's as enum
@@ -48,26 +47,20 @@ class Betid(Enum):
         self.sportybet_id = sportybet_id
 
     def to_endpoint(self, betting_site):
-        if betting_site == 'bet9ja':
-            endpoint_url = endpoints[betting_site]["leagues"].format(
-                leagueid=self.bet9ja_id
-            )
-        elif betting_site == 'betking':
-            endpoint_url = endpoints[betting_site]["leagues"].format(
-                leagueid=self.betking_id
-            )
-        elif betting_site == 'nairabet':
-            endpoint_url = endpoints[betting_site]["leagues"].format(
-                leagueid=self.nairabet_id
-            )
-        elif betting_site == 'nairabetDNB':
-            endpoint_url = endpoints[betting_site]["leaguesDNB"].format(
-                leagueid=self.nairabet_id
-            )
-        elif betting_site == 'sportybet':
-            pprint(endpoints[betting_site]["leagues"])
-            payload = endpoints[betting_site]["leagues"]
-            payload[0]["tournamentId"][0][0] = "sr:tournament:{0}".format(self.sportybet_id)
+        if betting_site == "bet9ja":
+            endpoint_url = endpoints[betting_site]["leagues"].format(leagueid=self.bet9ja_id)
+        elif betting_site == "betking":
+            endpoint_url = endpoints[betting_site]["leagues"].format(leagueid=self.betking_id)
+        elif betting_site == "nairabet":
+            endpoint_url = endpoints[betting_site]["leagues"].format(leagueid=self.nairabet_id)
+        elif betting_site == "nairabetDNB":
+            endpoint_url = endpoints[betting_site]["leaguesDNB"].format(leagueid=self.nairabet_id)
+        elif betting_site == "sportybet":
+            payload = sportybet_payload
+            pprint(payload)
+            tournament = payload[0]["tournamentId"]
+            if isinstance(tournament, list):
+                tournament[0][0] = "sr:tournament:{0}".format(self.sportybet_id)
             pprint(payload)
             return payload
         return endpoint_url

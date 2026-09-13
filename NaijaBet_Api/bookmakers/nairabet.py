@@ -1,7 +1,6 @@
-from NaijaBet_Api.id import Betid
-from NaijaBet_Api.utils.normalizer import nairabet_match_normalizer
-from NaijaBet_Api.utils import jsonpaths
 from NaijaBet_Api.bookmakers.BaseClass import BookmakerBaseClass
+from NaijaBet_Api.utils import jsonpaths
+from NaijaBet_Api.utils.normalizer import nairabet_match_normalizer
 
 """
 [summary]
@@ -18,18 +17,20 @@ class Nairabet(BookmakerBaseClass):
     Attributes:
         session: holds a requests session object for the class as a static variable.
     """
-    _site = 'nairabet'
+
+    _site = "nairabet"
     _url = "https://nairabet.com"
     _headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36",
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.9",
         "Referer": "https://nairabet.com/",
     }
 
-    def normalizer(self, args):
-        match = nairabet_match_normalizer(jsonpaths.nairabet_validator(args))
-        league = nairabet_match_normalizer(jsonpaths.nairabet_league_validator(args))
+    def normalizer(self, data):
+        match = nairabet_match_normalizer(jsonpaths.nairabet_validator(data))
+        league = nairabet_match_normalizer(jsonpaths.nairabet_league_validator(data))
         if len(league) > 0:
             print(league)
             print(match)
