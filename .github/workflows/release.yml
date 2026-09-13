@@ -196,7 +196,8 @@ jobs:
     needs: [build, publish-pypi, github-release]
     if: ${{ needs.publish-pypi.result == 'success' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # 5 min propagation wait + three 30 min polling checks, plus headroom.
+    timeout-minutes: 100
     env:
       VERSION: ${{ needs.build.outputs.version }}
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
