@@ -2,6 +2,8 @@ import copy
 from enum import Enum
 from pprint import pprint
 
+from NaijaBet_Api.utils.altenar import EVENTS_URL
+
 endpoints = {
     "bet9ja": {
         "sports": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetSports?DISP=0&v_cache_version=1.164.0.135",
@@ -16,8 +18,10 @@ endpoints = {
         "leagues": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/{leagueid}/0/0",
     },
     "nairabet": {
-        "leagues": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&limit=10",
-        "leaguesDNB": "https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId={leagueid}&marketId=DNB&limit=10",
+        # Nairabet's sportsbook is an Altenar widget; one GetEvents body carries the 1X2, double-chance,
+        # and draw-no-bet markets for a competition (champIds).
+        "leagues": EVENTS_URL,
+        "leaguesDNB": EVENTS_URL,
     },
 }
 
@@ -27,19 +31,18 @@ sportybet_payload = [
 ]
 
 
-# implement id's as enum
+# One member per league: (bet9ja group id, betking tournament id, nairabet/Altenar champ id, sportybet id)
 class Betid(Enum):
-    PREMIERLEAGUE = 170880, 841, "EN_PR", 17
-    CHAMPIONSHIP = 170881, 863, "EN_CH", 18
-    LEAGUE_ONE = 995354, 909, "EN_L1", 24
-    LEAGUE_TWO = 995355, 939, "EN_L2", 25
-    BUNDESLIGA = 180923, 1007, "DE_BL", 35
-    BUNDESLIGA_2 = 180924, 1025, "DE_B2", 44
-    LALIGA = 180928, 1108, "ES_PL", 8
-    LIGUE_1 = 950503, 1104, "FR_L1", 34
-    LIGUE_2 = 958691, 1179, "FR_L2", 182
-    SERIEA = 167856, 3775, "IT_SA", 23
-    # replace betkings laliga id
+    PREMIERLEAGUE = 170880, 20000841, 2936, 17
+    CHAMPIONSHIP = 170881, 20000863, 2937, 18
+    LEAGUE_ONE = 995354, 20000909, 2947, 24
+    LEAGUE_TWO = 995355, 20000939, 2946, 25
+    BUNDESLIGA = 180923, 20001007, 2950, 35
+    BUNDESLIGA_2 = 180924, 20001025, 2954, 44
+    LALIGA = 180928, 20001108, 2941, 8
+    LIGUE_1 = 950503, 20001104, 2943, 34
+    LIGUE_2 = 958691, 20001179, 3143, 182
+    SERIEA = 167856, 20003775, 2942, 23
 
     def __init__(self, bet9ja_id, betking_id, nairabet_id, sportybet_id):
         self.bet9ja_id = bet9ja_id

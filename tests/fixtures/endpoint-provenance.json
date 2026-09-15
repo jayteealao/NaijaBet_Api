@@ -1,0 +1,84 @@
+{
+  "recorded-at": "2026-09-15T22:55:16Z",
+  "egress": {
+    "city": "Lagos",
+    "country": "NG",
+    "provider": "Windscribe VPN (AS212238 Datacamp Limited)",
+    "ip": "79.127.149.13"
+  },
+  "resolver": "system resolver of the recording machine over the Windscribe tunnel (socket.gethostbyname)",
+  "method": "playwright-har",
+  "script": "scripts/record_session.py",
+  "recorded-by": "jayteealao",
+  "hosts": [
+    {
+      "bookmaker": "bet9ja",
+      "host": "bet9ja.com",
+      "role": "site",
+      "status": 302,
+      "resolved-ip": "23.216.155.73"
+    },
+    {
+      "bookmaker": "bet9ja",
+      "host": "sports.bet9ja.com",
+      "role": "api",
+      "status": 200,
+      "resolved-ip": "23.32.248.201",
+      "sample-url": "https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID=170880&DISP=0&GROUPMARKETID=1&matches=true"
+    },
+    {
+      "bookmaker": "betking",
+      "host": "betking.com",
+      "role": "site",
+      "status": 301,
+      "resolved-ip": "104.18.36.145"
+    },
+    {
+      "bookmaker": "betking",
+      "host": "www.betking.com",
+      "role": "site",
+      "status": 200,
+      "resolved-ip": "104.18.36.145"
+    },
+    {
+      "bookmaker": "betking",
+      "host": "sportsapicdn-desktop.betking.com",
+      "role": "api",
+      "status": 200,
+      "resolved-ip": "104.18.36.145",
+      "sample-url": "https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/20000841/0/0"
+    },
+    {
+      "bookmaker": "nairabet",
+      "host": "nairabet.com",
+      "role": "referer",
+      "status": null,
+      "resolved-ip": null,
+      "note": "Named only in the Referer header and the class docstring; the library never fetches it. The sportsbook is an Altenar widget served from the api host below."
+    },
+    {
+      "bookmaker": "nairabet",
+      "host": "sb2frontend-altenar2.biahosted.com",
+      "role": "api",
+      "status": 200,
+      "resolved-ip": "104.20.34.184",
+      "sample-url": "https://sb2frontend-altenar2.biahosted.com/api/widget/GetEvents?culture=en-GB&timezoneOffset=-60&integration=nairabet&deviceType=1&numFormat=en-GB&countryCode=NG&champIds=2936"
+    }
+  ],
+  "superseded": [
+    {
+      "bookmaker": "nairabet",
+      "host": "sports-api.nairabet.com",
+      "status": "NXDOMAIN",
+      "checked-at": "2026-09-15T22:10:00Z",
+      "note": "Former Nairabet API host; it does not resolve from the UK or from Lagos."
+    },
+    {
+      "bookmaker": "betking",
+      "path": "/api/feeds/prematch/en/4/841/0/0",
+      "status": 200,
+      "checked-at": "2026-09-15T22:12:00Z",
+      "note": "Tournament ids without the 20000000 prefix answer 200 with TotalNoOfItems 0 for all ten leagues."
+    }
+  ]
+}

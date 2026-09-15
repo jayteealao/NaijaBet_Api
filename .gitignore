@@ -116,3 +116,7 @@ dmypy.json
 
 # sdlc-workflow artifacts
 .ai/
+
+# Session recordings and study scratch space
+*.har
+.scratch/

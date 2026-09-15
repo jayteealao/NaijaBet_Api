@@ -1,5 +1,5 @@
 from NaijaBet_Api.bookmakers.BaseClass import BookmakerBaseClass
-from NaijaBet_Api.utils import jsonpaths
+from NaijaBet_Api.utils.altenar import MENU_URL, rows_from_get_events
 from NaijaBet_Api.utils.normalizer import nairabet_match_normalizer
 
 """
@@ -11,15 +11,16 @@ class Nairabet(BookmakerBaseClass):
     """
      This class provides access to https://nairabet.com 's odds data.
 
-     it provides a variety of methods to query the endpoints and obtain
-     odds data at a competiton and match level.
+     Nairabet's sportsbook is an Altenar widget, so the odds come from the widget API
+     rather than from nairabet.com itself. The class provides a variety of methods to
+     query the endpoints and obtain odds data at a competition and match level.
 
     Attributes:
         session: holds a requests session object for the class as a static variable.
     """
 
     _site = "nairabet"
-    _url = "https://nairabet.com"
+    _url = MENU_URL
     _headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
         "Chrome/120.0.0.0 Safari/537.36",
@@ -29,12 +30,4 @@ class Nairabet(BookmakerBaseClass):
     }
 
     def normalizer(self, data):
-        match = nairabet_match_normalizer(jsonpaths.nairabet_validator(data))
-        league = nairabet_match_normalizer(jsonpaths.nairabet_league_validator(data))
-        if len(league) > 0:
-            print(league)
-            print(match)
-            for m in match:
-                m["league"] = league[0]["league"]
-                m["league_id"] = league[0]["league_id"]
-        return match
+        return nairabet_match_normalizer(rows_from_get_events(data))
