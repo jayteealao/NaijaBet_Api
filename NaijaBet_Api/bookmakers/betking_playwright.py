@@ -45,6 +45,7 @@ class BetkingPlaywright(Betking):
             headless: Run browser in headless mode (default: True)
             timeout: Request timeout in milliseconds (default: 30000)
         """
+        super().__init__()
         self.site = self._site
         self.headless = headless
         self.timeout = timeout
