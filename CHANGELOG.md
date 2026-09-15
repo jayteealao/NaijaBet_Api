@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.1 — 2026-09-15
+
+Nothing changes for a user of the library.
+
+The release pipeline's smoke test against test.pypi.org now installs the package's dependencies from pypi.org only, and the package itself from test.pypi.org without dependencies. A release no longer stalls on an unrelated package that is hosted on test.pypi.org under a dependency's name.
+
 ## 0.3.0 — 2026-09-13
 
 Python 3.10 or later is required. Installation on Python 3.8 or 3.9 now fails.
