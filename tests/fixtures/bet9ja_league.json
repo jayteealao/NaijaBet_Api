@@ -1,0 +1,51 @@
+{
+  "D": {
+    "E": [
+      {
+        "DS": "Arsenal - Chelsea",
+        "GN": "English Premier League",
+        "STARTDATE": "2026-09-20T15:00:00",
+        "GID": 170880,
+        "ID": 1001,
+        "O": {
+          "S_1X2_1": 2.1,
+          "S_1X2_X": 3.4,
+          "S_1X2_2": 3.2,
+          "S_DC_1X": 1.3,
+          "S_DC_12": 1.27,
+          "S_DC_X2": 1.65
+        }
+      },
+      {
+        "DS": "Liverpool - Everton",
+        "GN": "English Premier League",
+        "STARTDATE": "2026-09-20T15:00:00",
+        "GID": 170880,
+        "ID": 1002,
+        "O": {
+          "S_1X2_1": 1.55,
+          "S_1X2_X": 4.2,
+          "S_1X2_2": 5.5,
+          "S_DC_1X": 1.13,
+          "S_DC_12": 1.21,
+          "S_DC_X2": 2.35
+        }
+      },
+      {
+        "DS": "Manchester City - Tottenham",
+        "GN": "English Premier League",
+        "STARTDATE": "2026-09-20T15:00:00",
+        "GID": 170880,
+        "ID": 1003,
+        "O": {
+          "S_1X2_1": 1.7,
+          "S_1X2_X": 3.9,
+          "S_1X2_2": 4.6,
+          "S_DC_1X": 1.18,
+          "S_DC_12": 1.24,
+          "S_DC_X2": 2.1
+        }
+      }
+    ]
+  }
+}
