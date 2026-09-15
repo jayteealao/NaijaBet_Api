@@ -16,6 +16,7 @@ from werkzeug.wrappers import Response
 
 import NaijaBet_Api.bookmakers.BaseClass as base_module
 from NaijaBet_Api.bookmakers.BaseClass import BookmakerBaseClass
+from NaijaBet_Api.bookmakers.nairabet import Nairabet
 from NaijaBet_Api.id import Betid, endpoints
 from NaijaBet_Api.utils import jsonpaths
 from NaijaBet_Api.utils.normalizer import bet9ja_match_normalizer
@@ -175,3 +176,19 @@ def point_at(monkeypatch):
         monkeypatch.setitem(endpoints["bet9ja"], "leagues", base_url + "/league/{leagueid}")
 
     return apply
+
+
+@pytest.fixture
+def nairabet_payload() -> dict:
+    """A canned Altenar ``GetEvents`` body: three Premier League events with their 1x2 and double-chance markets."""
+    return json.loads((FIXTURES / "nairabet_league.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def nairabet_stub(httpserver, monkeypatch, nairabet_payload):
+    """The real ``Nairabet`` class with its warm-up and league URLs pointed at the stub server."""
+    monkeypatch.setitem(endpoints["nairabet"], "leagues", httpserver.url_for("/GetEvents?champIds={leagueid}"))
+    monkeypatch.setattr(Nairabet, "_url", httpserver.url_for("/GetTopSportMenu"))
+    httpserver.expect_request("/GetTopSportMenu").respond_with_json({})
+    httpserver.expect_request("/GetEvents").respond_with_json(nairabet_payload)
+    return Nairabet

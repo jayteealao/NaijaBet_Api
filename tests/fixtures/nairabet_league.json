@@ -1,0 +1,484 @@
+{
+ "dates": [],
+ "availableChamps": [],
+ "availableCategories": [],
+ "topSports": [],
+ "headers": [
+  {
+   "typeId": 1,
+   "name": "1x2",
+   "mst": 0,
+   "odds": [
+    {
+     "id": 1,
+     "name": "Home"
+    },
+    {
+     "id": 2,
+     "name": "X"
+    },
+    {
+     "id": 3,
+     "name": "Away"
+    }
+   ]
+  },
+  {
+   "typeId": 10,
+   "name": "Double chance",
+   "mst": 0,
+   "odds": [
+    {
+     "id": 9,
+     "name": "1X"
+    },
+    {
+     "id": 10,
+     "name": "12"
+    },
+    {
+     "id": 11,
+     "name": "X2"
+    }
+   ]
+  }
+ ],
+ "pageCount": 0,
+ "page": 0,
+ "markets": [
+  {
+   "oddIds": [
+    4454818144,
+    4454818145,
+    4454818146
+   ],
+   "typeId": 1,
+   "sportMarketId": 73990,
+   "id": 1717762743,
+   "name": "1x2 - Enhanced Prices"
+  },
+  {
+   "oddIds": [
+    4454816730,
+    4454816728,
+    4454816729
+   ],
+   "typeId": 10,
+   "sportMarketId": 70495,
+   "id": 1717762325,
+   "name": "Double chance"
+  },
+  {
+   "oddIds": [
+    4454277253,
+    4454277254,
+    4454277255
+   ],
+   "typeId": 1,
+   "sportMarketId": 73990,
+   "id": 1717543684,
+   "name": "1x2 - Enhanced Prices"
+  },
+  {
+   "oddIds": [
+    4454275866,
+    4454275864,
+    4454275865
+   ],
+   "typeId": 10,
+   "sportMarketId": 70495,
+   "id": 1717543273,
+   "name": "Double chance"
+  },
+  {
+   "oddIds": [
+    4454567888,
+    4454567889,
+    4454567890
+   ],
+   "typeId": 1,
+   "sportMarketId": 73990,
+   "id": 1717662611,
+   "name": "1x2 - Enhanced Prices"
+  },
+  {
+   "oddIds": [
+    4454566506,
+    4454566504,
+    4454566505
+   ],
+   "typeId": 10,
+   "sportMarketId": 70495,
+   "id": 1717662204,
+   "name": "Double chance"
+  }
+ ],
+ "odds": [
+  {
+   "typeId": 1,
+   "price": 2.94,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43640,
+   "id": 4454818144,
+   "name": "Brentford"
+  },
+  {
+   "typeId": 2,
+   "price": 3.93,
+   "isMB": false,
+   "oddStatus": 0,
+   "id": 4454818145,
+   "name": "X"
+  },
+  {
+   "typeId": 3,
+   "price": 2.29,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43700,
+   "id": 4454818146,
+   "name": "Chelsea"
+  },
+  {
+   "typeId": 9,
+   "price": 1.6,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43640,
+   "isDBB": true,
+   "id": 4454816730,
+   "name": "Brentford or draw"
+  },
+  {
+   "typeId": 10,
+   "price": 1.25,
+   "isMB": false,
+   "oddStatus": 0,
+   "isDBB": true,
+   "id": 4454816728,
+   "name": "Brentford or Chelsea"
+  },
+  {
+   "typeId": 11,
+   "price": 1.4,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43700,
+   "isDBB": true,
+   "id": 4454816729,
+   "name": "Draw or Chelsea"
+  },
+  {
+   "typeId": 1,
+   "price": 2.02,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43702,
+   "id": 4454277253,
+   "name": "Tottenham"
+  },
+  {
+   "typeId": 2,
+   "price": 3.77,
+   "isMB": false,
+   "oddStatus": 0,
+   "id": 4454277254,
+   "name": "X"
+  },
+  {
+   "typeId": 3,
+   "price": 3.69,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43690,
+   "id": 4454277255,
+   "name": "Aston Villa"
+  },
+  {
+   "typeId": 9,
+   "price": 1.2858,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43702,
+   "isDBB": true,
+   "id": 4454275866,
+   "name": "Tottenham or draw"
+  },
+  {
+   "typeId": 10,
+   "price": 1.2728,
+   "isMB": false,
+   "oddStatus": 0,
+   "isDBB": true,
+   "id": 4454275864,
+   "name": "Tottenham or Aston Villa"
+  },
+  {
+   "typeId": 11,
+   "price": 1.7334,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43690,
+   "isDBB": true,
+   "id": 4454275865,
+   "name": "Draw or Aston Villa"
+  },
+  {
+   "typeId": 1,
+   "price": 4.8,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43693,
+   "id": 4454567888,
+   "name": "Brighton"
+  },
+  {
+   "typeId": 2,
+   "price": 3.88,
+   "isMB": false,
+   "oddStatus": 0,
+   "id": 4454567889,
+   "name": "X"
+  },
+  {
+   "typeId": 3,
+   "price": 1.77,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43699,
+   "id": 4454567890,
+   "name": "Arsenal"
+  },
+  {
+   "typeId": 9,
+   "price": 1.96,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43693,
+   "isDBB": true,
+   "id": 4454566506,
+   "name": "Brighton or draw"
+  },
+  {
+   "typeId": 10,
+   "price": 1.25,
+   "isMB": false,
+   "oddStatus": 0,
+   "isDBB": true,
+   "id": 4454566504,
+   "name": "Brighton or Arsenal"
+  },
+  {
+   "typeId": 11,
+   "price": 1.2,
+   "isMB": false,
+   "oddStatus": 0,
+   "competitorId": 43699,
+   "isDBB": true,
+   "id": 4454566505,
+   "name": "Draw or Arsenal"
+  }
+ ],
+ "events": [
+  {
+   "marketIds": [
+    1717762743,
+    1717762325
+   ],
+   "isBooked": true,
+   "isParlay": false,
+   "offers": [
+    {
+     "type": 0,
+     "parameter": 2
+    },
+    {
+     "type": 4
+    },
+    {
+     "type": 6
+    }
+   ],
+   "code": 6048,
+   "hasStream": false,
+   "extId": "fp32_ar:match:600052",
+   "sc": 2446,
+   "mc": 260,
+   "rc": false,
+   "pId": 32,
+   "et": 0,
+   "hasStats": true,
+   "competitorIds": [
+    43640,
+    43700
+   ],
+   "sportId": 66,
+   "catId": 497,
+   "champId": 2936,
+   "status": 0,
+   "startDate": "2026-09-18T19:00:00Z",
+   "id": 17162768,
+   "name": "Brentford vs. Chelsea"
+  },
+  {
+   "marketIds": [
+    1717543684,
+    1717543273
+   ],
+   "isBooked": true,
+   "isParlay": false,
+   "offers": [
+    {
+     "type": 0,
+     "parameter": 2
+    },
+    {
+     "type": 4
+    },
+    {
+     "type": 6
+    }
+   ],
+   "code": 718,
+   "hasStream": false,
+   "extId": "fp32_ar:match:600053",
+   "sc": 2346,
+   "mc": 256,
+   "rc": false,
+   "pId": 32,
+   "et": 0,
+   "hasStats": true,
+   "competitorIds": [
+    43702,
+    43690
+   ],
+   "sportId": 66,
+   "catId": 497,
+   "champId": 2936,
+   "status": 0,
+   "startDate": "2026-09-19T11:30:00Z",
+   "id": 17162769,
+   "name": "Tottenham vs. Aston Villa"
+  },
+  {
+   "marketIds": [
+    1717662611,
+    1717662204
+   ],
+   "isBooked": true,
+   "isParlay": false,
+   "offers": [
+    {
+     "type": 0,
+     "parameter": 2
+    },
+    {
+     "type": 4
+    },
+    {
+     "type": 6
+    }
+   ],
+   "code": 1763,
+   "hasStream": false,
+   "extId": "fp32_ar:match:600056",
+   "sc": 2384,
+   "mc": 256,
+   "rc": false,
+   "pId": 32,
+   "et": 0,
+   "hasStats": true,
+   "competitorIds": [
+    43693,
+    43699
+   ],
+   "sportId": 66,
+   "catId": 497,
+   "champId": 2936,
+   "status": 0,
+   "startDate": "2026-09-19T14:00:00Z",
+   "id": 17162773,
+   "name": "Brighton vs. Arsenal"
+  }
+ ],
+ "sports": [
+  {
+   "catIds": [
+    497
+   ],
+   "typeId": 1,
+   "iconName": "soccer",
+   "hasLiveEvents": false,
+   "id": 66,
+   "name": "Football"
+  }
+ ],
+ "categories": [
+  {
+   "champIds": [
+    2936
+   ],
+   "iso": "ENG",
+   "hasLiveEvents": false,
+   "id": 497,
+   "name": "England"
+  }
+ ],
+ "champs": [
+  {
+   "offers": [
+    {
+     "type": 0,
+     "parameter": 2
+    },
+    {
+     "type": 6
+    }
+   ],
+   "hasLiveEvents": false,
+   "id": 2936,
+   "name": "Premier League"
+  }
+ ],
+ "competitors": [
+  {
+   "hasConfigJersey": true,
+   "abbreviation": "BRE",
+   "id": 43640,
+   "name": "Brentford"
+  },
+  {
+   "hasConfigJersey": true,
+   "abbreviation": "CHE",
+   "id": 43700,
+   "name": "Chelsea"
+  },
+  {
+   "hasConfigJersey": true,
+   "abbreviation": "TOT",
+   "id": 43702,
+   "name": "Tottenham"
+  },
+  {
+   "hasConfigJersey": true,
+   "abbreviation": "AVL",
+   "id": 43690,
+   "name": "Aston Villa"
+  },
+  {
+   "jerseyChamps": [
+    2936
+   ],
+   "abbreviation": "BHA",
+   "id": 43693,
+   "name": "Brighton"
+  },
+  {
+   "hasConfigJersey": true,
+   "abbreviation": "ARS",
+   "id": 43699,
+   "name": "Arsenal"
+  }
+ ]
+}
