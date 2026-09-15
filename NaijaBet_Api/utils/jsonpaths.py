@@ -19,7 +19,7 @@ bet9ja_search_string = (
 )
 
 betking_search_string = (
-    'AreaMatches[0].Items[*].{"match": ItemName, '
+    'AreaMatches[].Items[].{"match": ItemName, '
     '"league": TournamentName, '
     '"time": ItemDate, '
     '"league_id": CategoryId, '
