@@ -57,6 +57,10 @@ Maintainers release from `main`:
 
 1. Run `make release-pr`. It computes the next version from the commits since the last tag, updates `pyproject.toml` and `CHANGELOG.md`, and opens a release pull request.
 2. Merge the release pull request.
-3. Run `make tag`. The tag starts the release workflow, which publishes to test.pypi.org, verifies the install, waits for the reviewer approval, publishes to pypi.org, and creates the GitHub release. Until both `SDLC_GATE_TEST_PYPI_PUBLISH` and `SDLC_GATE_PYPI_PUBLISH` are set, the tag workflow only tests and builds and it publishes nothing.
+3. Run `make tag`. The tag starts the release workflow, which runs the offline tests and the live suite from a Nigerian egress, publishes to test.pypi.org, verifies the install, waits for the reviewer approval, publishes to pypi.org, and creates the GitHub release. Until both `SDLC_GATE_TEST_PYPI_PUBLISH` and `SDLC_GATE_PYPI_PUBLISH` are set, the tag workflow only tests and builds and it publishes nothing.
+
+Check the computed version before step 1 with `git cliff --bumped-version`; a commit marked `!` or carrying a `BREAKING CHANGE` footer bumps the minor version while the major version is 0.
+
+The release workflow runs the live suite (`.github/workflows/live.yml`) before it builds; a failed or skipped live job blocks the release. When the live job cannot run and the bookmakers answer from a maintainer's Lagos connection, follow `docs/runbooks/live-suite.md` to run `make live` and dispatch the release with the record.
 
 Recovery steps for known failures are in `docs/runbooks/`. To yank a bad release, follow `docs/runbooks/bad-release-rollback.md`.

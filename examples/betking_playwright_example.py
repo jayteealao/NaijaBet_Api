@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 """
-Complete example of using Betking with Playwright browser automation.
+Examples for BetkingPlaywright, the browser-driven Betking client.
 
-This example shows how to:
-1. Use Betking with Playwright to bypass Cloudflare
-2. Fetch odds from various leagues
-3. Compare odds from multiple bookmakers
-4. Handle errors gracefully
+Plain ``Betking`` works over HTTP requests from a Nigerian egress. From another egress the
+Betking API answers 403 and the library raises ``BookmakerBlockedError``; ``BetkingPlaywright``
+fetches through a Chromium page instead. This example shows how to:
+1. Use BetkingPlaywright with the context manager
+2. Fetch odds from several leagues
+3. Compare odds with Bet9ja and Nairabet
+4. Handle the typed exceptions
 
 Requirements:
-    pip install playwright
+    pip install "NaijaBet_Api[playwright]"
     playwright install chromium
-
-Author: NaijaBet API
 """
 
 from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
 from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
 from NaijaBet_Api.bookmakers.nairabet import Nairabet
+from NaijaBet_Api.exceptions import BookmakerBlockedError, BookmakerTimeoutError, NaijaBetError
 from NaijaBet_Api.id import Betid
 
 
@@ -203,33 +204,31 @@ def example_6_get_all_leagues():
 
 
 def example_7_error_handling():
-    """Example 7: Robust error handling"""
+    """Example 7: Typed exceptions: retry a timeout, stop on a block"""
     print("\n" + "=" * 80)
-    print("EXAMPLE 7: Robust Error Handling")
+    print("EXAMPLE 7: Error Handling")
     print("=" * 80)
 
     def fetch_with_retry(betking, league, max_retries=3):
-        """Fetch with retry logic"""
-        for attempt in range(max_retries):
+        """Retry a timeout; a block or any other failure propagates to the caller."""
+        for attempt in range(1, max_retries + 1):
             try:
-                print(f"   Attempt {attempt + 1}/{max_retries}...")
-                data = betking.get_league(league)
-                return data
-            except Exception as e:
-                print(f"   ⚠️  Error: {e}")
-                if attempt == max_retries - 1:
-                    print(f"   ❌ Failed after {max_retries} attempts")
-                    return []
-        return []
+                print(f"   Attempt {attempt}/{max_retries}...")
+                return betking.get_league(league)
+            except BookmakerTimeoutError as exc:
+                print(f"   Timed out: {exc}")
+        raise BookmakerTimeoutError("betking", f"timed out on all {max_retries} attempts")
 
     try:
         with BetkingPlaywright(headless=True) as betking:
-            print("\n📡 Fetching with retry logic...")
+            print("\nFetching with retry logic...")
             data = fetch_with_retry(betking, Betid.PREMIERLEAGUE)
-            print(f"✅ Final result: {len(data)} matches")
+            print(f"Final result: {len(data)} matches")
 
-    except Exception as e:
-        print(f"❌ Error: {e}")
+    except BookmakerBlockedError as exc:
+        print(f"Blocked ({exc.wall}, HTTP {exc.status}); a Nigerian egress is required")
+    except NaijaBetError as exc:
+        print(f"Error: {exc}")
 
 
 def main():
@@ -238,8 +237,8 @@ def main():
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                  BETKING PLAYWRIGHT INTEGRATION EXAMPLES                     ║
 ║                                                                              ║
-║  This demonstrates how to use Betking with Playwright browser automation    ║
-║  to bypass Cloudflare bot protection.                                       ║
+║  This demonstrates BetkingPlaywright, the browser-driven Betking client      ║
+║  for an egress that the Betking API denies.                                 ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
     """)
 
