@@ -1,6 +1,4 @@
-import copy
 from enum import Enum
-from pprint import pprint
 
 from NaijaBet_Api.utils.altenar import EVENTS_URL
 
@@ -25,11 +23,6 @@ endpoints = {
     },
 }
 
-# Sportybet takes a request payload instead of a URL template; to_endpoint patches the tournament id in.
-sportybet_payload = [
-    {"sportId": "sr:sport:1", "marketId": "1,18,10,29,11,26,36,14", "tournamentId": [["sr:tournament:1"]]}
-]
-
 
 # One member per league: (bet9ja group id, betking tournament id, nairabet/Altenar champ id, sportybet id)
 class Betid(Enum):
@@ -50,21 +43,13 @@ class Betid(Enum):
         self.nairabet_id = nairabet_id
         self.sportybet_id = sportybet_id
 
-    def to_endpoint(self, betting_site):
-        if betting_site == "bet9ja":
-            endpoint_url = endpoints[betting_site]["leagues"].format(leagueid=self.bet9ja_id)
-        elif betting_site == "betking":
-            endpoint_url = endpoints[betting_site]["leagues"].format(leagueid=self.betking_id)
-        elif betting_site == "nairabet":
-            endpoint_url = endpoints[betting_site]["leagues"].format(leagueid=self.nairabet_id)
-        elif betting_site == "nairabetDNB":
-            endpoint_url = endpoints[betting_site]["leaguesDNB"].format(leagueid=self.nairabet_id)
-        elif betting_site == "sportybet":
-            payload = copy.deepcopy(sportybet_payload)
-            pprint(payload)
-            tournament = payload[0]["tournamentId"]
-            if isinstance(tournament, list):
-                tournament[0][0] = "sr:tournament:{0}".format(self.sportybet_id)
-            pprint(payload)
-            return payload
-        return endpoint_url
+    def to_endpoint(self, betting_site: str) -> str:
+        """Return the league URL for one of the three bookmakers.
+
+        Raises:
+            ValueError: ``betting_site`` is not ``bet9ja``, ``betking``, or ``nairabet``.
+        """
+        ids = {"bet9ja": self.bet9ja_id, "betking": self.betking_id, "nairabet": self.nairabet_id}
+        if betting_site not in ids:
+            raise ValueError(f"unknown betting site {betting_site!r}; expected one of bet9ja, betking, nairabet")
+        return endpoints[betting_site]["leagues"].format(leagueid=ids[betting_site])

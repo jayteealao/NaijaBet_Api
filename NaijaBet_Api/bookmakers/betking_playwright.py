@@ -10,17 +10,23 @@ Usage:
     from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
     from NaijaBet_Api.id import Betid
 
-    betking = BetkingPlaywright()
-    data = betking.get_league(Betid.PREMIERLEAGUE)
-    print(f"Got {len(data)} matches")
+    with BetkingPlaywright() as betking:
+        data = betking.get_league(Betid.PREMIERLEAGUE)
+
+The class has no async path: ``async_get_league``, ``async_get_all``, and ``async_session``
+raise ``NotImplementedError``. Failures raise the same exceptions as the other bookmakers.
 """
 
-from typing import Any, Dict, List, Optional
+import logging
+from typing import Any, Dict, List, NoReturn, Optional
 
+import aiohttp
 from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
 
 from NaijaBet_Api.bookmakers.betking import Betking
 from NaijaBet_Api.id import Betid
+
+logger = logging.getLogger(__name__)
 
 
 class BetkingPlaywright(Betking):
@@ -36,6 +42,8 @@ class BetkingPlaywright(Betking):
         page: Playwright page instance
         headless: Whether to run browser in headless mode
     """
+
+    _sports_url = "https://betking.com/sports"
 
     def __init__(self, headless: bool = True, timeout: int = 30000):
         """
@@ -104,9 +112,13 @@ class BetkingPlaywright(Betking):
         self.page.set_default_timeout(self.timeout)
 
         # Visit main site to establish session and get past Cloudflare
-        print("Loading Betking site...")
-        self.page.goto("https://betking.com/sports", wait_until="networkidle")
-        print("Browser session established")
+        logger.info("loading %s", self._sports_url)
+        response = self.page.goto(self._sports_url, wait_until="networkidle")
+        status = response.status if response is not None else None
+        if status == 200:
+            logger.info("Browser session established")
+        else:
+            logger.warning("betking answered %s on browser start", status)
 
     def _stop_browser(self):
         """Stop Playwright browser and clean up"""
@@ -132,116 +144,34 @@ class BetkingPlaywright(Betking):
 
         Returns:
             List of match dictionaries with odds data
-        """
-        # Start browser if not already started
-        if self.browser is None:
-            self._start_browser()
 
-        try:
-            # Construct API URL
-            api_url = league.to_endpoint(self.site)
-
-            print(f"Fetching: {api_url}")
-
-            # Use browser's request context to fetch API
-            if self.page is None:
-                raise RuntimeError("Browser page is not started; call _start_browser() first")
-            response = self.page.request.get(api_url)
-
-            if response.status != 200:
-                print(f"Warning: HTTP {response.status} for {api_url}")
-                return []
-
-            # Parse JSON response
-            try:
-                data = response.json()
-                # Normalize the data using parent class method
-                return self.normalizer(data)
-            except Exception as e:
-                print(f"Error parsing JSON: {e}")
-                return []
-
-        except Exception as e:
-            print(f"Error fetching league: {e}")
-            return []
-
-    def get_all(self) -> List[Dict[str, Any]]:
-        """
-        Get all leagues' odds using browser automation.
-
-        Returns:
-            List of all matches from all implemented leagues
+        Raises:
+            BookmakerBlockedError: the bookmaker answered with a non-200 status.
+            ResponseParseError: the body is not the expected JSON shape.
         """
         if self.browser is None:
             self._start_browser()
+        if self.page is None:
+            raise RuntimeError("Browser page is not started; call _start_browser() first")
 
-        self.data = []
-        for league in Betid:
-            league_data = self.get_league(league)
-            if league_data:
-                self.data.extend(league_data)
+        api_url = league.to_endpoint(self.site)
+        logger.info("fetching %s", api_url)
+        response = self.page.request.get(api_url)
+        body = response.text()
+        if response.status != 200:
+            raise self._blocked(response.status, body)
+        return self._parse(body)
 
-        return self.data
+    # The inherited get_all and get_team call get_league, so they drive the browser as well.
 
-    def get_team(self, team: str) -> List[Dict[str, Any]]:
-        """
-        Get odds for matches involving a specific team.
+    def async_get_league(
+        self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession | None = None
+    ) -> NoReturn:
+        raise NotImplementedError("BetkingPlaywright has no async path; use get_league")
 
-        Args:
-            team: Team name to search for
+    def async_get_all(self) -> NoReturn:
+        raise NotImplementedError("BetkingPlaywright has no async path; use get_all")
 
-        Returns:
-            List of matches involving the team
-        """
-        all_matches = self.get_all()
-
-        def filter_func(data):
-            match: str = data["match"]
-            return match.lower().find(team.lower()) != -1
-
-        return list(filter(filter_func, all_matches))
-
-
-def example_usage():
-    """Example of how to use BetkingPlaywright"""
-
-    # Method 1: Using context manager (recommended)
-    print("=" * 70)
-    print("Method 1: Using context manager")
-    print("=" * 70)
-
-    with BetkingPlaywright(headless=True) as betking:
-        # Get Premier League odds
-        pl_data = betking.get_league(Betid.PREMIERLEAGUE)
-        print(f"\nPremier League: {len(pl_data)} matches")
-        if pl_data:
-            print(f"First match: {pl_data[0]['match']}")
-            print(f"Odds: {pl_data[0].get('home')} / {pl_data[0].get('draw')} / {pl_data[0].get('away')}")
-
-        # Get La Liga odds
-        ll_data = betking.get_league(Betid.LALIGA)
-        print(f"\nLa Liga: {len(ll_data)} matches")
-
-        # Search for specific team
-        arsenal_matches = betking.get_team("Arsenal")
-        print(f"\nArsenal matches: {len(arsenal_matches)}")
-
-    # Browser automatically closed after context manager exits
-
-    print("\n" + "=" * 70)
-    print("Method 2: Manual management")
-    print("=" * 70)
-
-    # Method 2: Manual browser management
-    betking = BetkingPlaywright(headless=True)
-    betking._start_browser()
-
-    try:
-        data = betking.get_league(Betid.BUNDESLIGA)
-        print(f"\nBundesliga: {len(data)} matches")
-    finally:
-        betking._stop_browser()
-
-
-if __name__ == "__main__":
-    example_usage()
+    @property
+    def async_session(self) -> NoReturn:
+        raise NotImplementedError("BetkingPlaywright has no async path; use get_league or get_all")

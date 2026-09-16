@@ -1558,6 +1558,7 @@ source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "arrow" },
+    { name = "brotli" },
     { name = "jmespath" },
     { name = "requests" },
 ]
@@ -1569,7 +1570,6 @@ playwright = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "brotli" },
     { name = "build" },
     { name = "pip-audit" },
     { name = "playwright" },
@@ -1588,6 +1588,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.14" },
     { name = "arrow", specifier = ">=1.4" },
+    { name = "brotli", specifier = ">=1.2.0" },
     { name = "jmespath", specifier = ">=1.1" },
     { name = "playwright", marker = "extra == 'playwright'" },
     { name = "requests", specifier = ">=2.34" },
@@ -1596,7 +1597,6 @@ provides-extras = ["playwright"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "brotli", specifier = ">=1.2.0" },
     { name = "build", specifier = ">=1.6" },
     { name = "pip-audit", specifier = ">=2.10" },
     { name = "playwright", specifier = ">=1.62.0" },
