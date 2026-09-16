@@ -3,6 +3,20 @@ name: release
 on:
   push:
     tags: ['v[0-9]*']
+  # Owner-run override of the live gate: the tag must already exist, and live-run.json must be
+  # younger than 7 days with rows for all three bookmakers (scripts/check_live_run.py).
+  #   gh workflow run release.yml --ref main -f tag=vX.Y.Z -F live-run-json=@live-run.json
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (vX.Y.Z); must exist'
+        required: true
+        type: string
+      live-run-json:
+        description: 'Content of an owner-run live-run.json; when present the live job is skipped'
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -14,6 +28,7 @@ concurrency:
 
 env:
   PACKAGE: NaijaBet_Api
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   test:
@@ -35,13 +50,34 @@ jobs:
       - name: Install dependencies
         run: uv sync --group dev
       - name: Test
-        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py -m "not live_site"
-      - name: Live-site tests
-        continue-on-error: true
-        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py -m live_site
+        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0
+
+  # Required: every bookmaker returns rows from the Lagos egress (charter C6). Skipped only when
+  # the owner dispatches with a live-run.json override, which check-override validates instead.
+  live:
+    if: ${{ github.event_name == 'push' || inputs.live-run-json == '' }}
+    uses: ./.github/workflows/live.yml
+    secrets: inherit
+
+  check-override:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.live-run-json != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Validate the owner-run live record
+        env:
+          LIVE_RUN_JSON: ${{ inputs.live-run-json }}
+        run: printf '%s' "$LIVE_RUN_JSON" | python3 scripts/check_live_run.py -
 
   build:
-    needs: test
+    needs: [test, live, check-override]
+    if: >-
+      ${{ !cancelled()
+          && needs.test.result == 'success'
+          && (needs.live.result == 'success' || needs.check-override.result == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     outputs:
@@ -51,6 +87,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
@@ -60,7 +97,7 @@ jobs:
       - name: Check that the tag matches the project version
         id: version
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          TAG_VERSION="${RELEASE_TAG#v}"
           PROJECT_VERSION="$(uv run python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
           if [ "$TAG_VERSION" != "$PROJECT_VERSION" ]; then
             echo "Tag version $TAG_VERSION does not match pyproject.toml version $PROJECT_VERSION."
@@ -177,6 +214,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: dist
@@ -196,7 +234,7 @@ jobs:
         run: |
           PRERELEASE_FLAG=""
           case "$VERSION" in *rc*|*a*|*b*) PRERELEASE_FLAG="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" dist/* \
+          gh release create "$RELEASE_TAG" dist/* \
             --title "$PACKAGE $VERSION" \
             --notes-file RELEASE_NOTES.md \
             $PRERELEASE_FLAG

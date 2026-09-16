@@ -3,9 +3,9 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 PACKAGE := NaijaBet_Api
-PYTEST_ARGS := tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py
+PYTEST_ARGS := tests/ -q --timeout=120 -o log_cli=0
 
-.PHONY: help setup check format lint type-check test build release-pr tag clean
+.PHONY: help setup check format lint type-check test live build release-pr tag clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-12s %s\n", $$1, $$2}'
@@ -27,6 +27,9 @@ type-check: ## Type-check the package
 
 test: ## Run the test suite with coverage
 	uv run pytest $(PYTEST_ARGS) --cov=$(PACKAGE)
+
+live: ## Run the live suite against the bookmakers and write live-run.json (connect the Lagos VPN first)
+	uv run pytest tests/ -q --timeout=300 -o log_cli=0 -m live_site --live-record live-run.json
 
 build: ## Build the wheel and sdist and check them
 	rm -rf dist/

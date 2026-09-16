@@ -1,0 +1,66 @@
+name: live
+
+# Runs the live suite against the three bookmakers from a Nigerian egress. The tunnel comes from
+# the repository secret WINDSCRIBE_WG_CONF (a Windscribe WireGuard config for Lagos). The release
+# workflow calls this workflow; the owner can also dispatch it, and it runs weekly to catch drift.
+
+on:
+  workflow_call:
+    secrets:
+      WINDSCRIBE_WG_CONF:
+        required: true
+  workflow_dispatch:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+        with:
+          enable-cache: true
+          python-version-file: .python-version
+      - name: Install dependencies
+        run: uv sync --group dev
+      - name: Install the Chromium build for the Playwright tests
+        run: uv run playwright install --with-deps chromium
+      # The exported config can carry a DNS line (needs resolvconf, absent on the runner image) and
+      # an IPv6 route (the runner has none); both are stripped. The secret never reaches the log.
+      - name: Bring up the tunnel
+        env:
+          WG_CONF: ${{ secrets.WINDSCRIBE_WG_CONF }}
+        run: |
+          if [ -z "$WG_CONF" ]; then
+            echo "WINDSCRIBE_WG_CONF is empty; create the secret from a Windscribe Lagos WireGuard config."
+            exit 1
+          fi
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq wireguard-tools
+          printf '%s\n' "$WG_CONF" | sed -e '/^DNS *=/d' -e 's/, *::\/0//' | sudo tee /etc/wireguard/wg0.conf >/dev/null
+          sudo chmod 600 /etc/wireguard/wg0.conf
+          sudo wg-quick up wg0
+      - name: Prove the egress
+        run: |
+          COUNTRY="$(curl -sS --max-time 30 https://ipinfo.io/country | tr -d '[:space:]')"
+          CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 https://bet9ja.com)"
+          echo "egress country=$COUNTRY bet9ja=$CODE"
+          [ "$COUNTRY" = NG ] && [ "$CODE" = 200 ]
+      - name: Live suite
+        run: make live
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: live-run
+          path: live-run.json
+          if-no-files-found: ignore
+      - name: Tear down the tunnel
+        if: always()
+        run: sudo wg-quick down wg0 || true

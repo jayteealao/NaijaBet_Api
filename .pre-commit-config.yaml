@@ -32,11 +32,15 @@ repos:
       - id: conventional-pre-commit
         stages: [commit-msg]
         args: [--strict, feat, fix, perf, docs, refactor, build, ci, chore, style, test, revert]
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.12
+    hooks:
+      - id: actionlint
   - repo: local
     hooks:
       - id: pytest-fast
         name: pytest (fast subset)
-        entry: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py -x
+        entry: uv run pytest tests/ -q --timeout=120 -o log_cli=0 -x
         language: system
         pass_filenames: false
         stages: [pre-push]

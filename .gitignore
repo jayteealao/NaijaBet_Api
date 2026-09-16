@@ -120,3 +120,6 @@ dmypy.json
 # Session recordings and study scratch space
 *.har
 .scratch/
+
+# Per-run record written by `make live`; the release override consumes it, never git.
+live-run.json

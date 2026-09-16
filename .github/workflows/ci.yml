@@ -78,8 +78,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: uv sync --group dev
+      - name: Install the Chromium build for the offline browser test
+        run: uv run playwright install --with-deps chromium
       - name: test
-        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py -m "not live_site" --cov=NaijaBet_Api
+        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --cov=NaijaBet_Api
 
   # Single status context for the required check; the matrix jobs report as "test-matrix (x.y)".
   test:
@@ -94,24 +96,6 @@ jobs:
             echo "test-matrix result: ${{ needs.test-matrix.result }}"
             exit 1
           fi
-
-  # Non-required: exercises the live bookmaker sites. See docs/runbooks/live-site-test-failure.md.
-  live-site-tests:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
-        with:
-          enable-cache: true
-          python-version: "3.12"
-      - name: Install dependencies
-        run: uv sync --group dev
-      - name: test
-        run: uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py -m live_site
 
   commit-lint:
     runs-on: ubuntu-latest

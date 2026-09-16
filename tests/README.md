@@ -44,16 +44,14 @@ The test suite includes comprehensive tests for all three bookmakers:
 python -m pytest tests/ -v
 ```
 
-### Run tests for a specific bookmaker
+### Run the live suite (connect the Lagos VPN first)
 ```bash
-python -m pytest tests/test_bet9ja_e2e.py -v
-python -m pytest tests/test_betking_e2e.py -v
-python -m pytest tests/test_nairabet_e2e.py -v
+make live
 ```
 
-### Run a specific test
+### Run the live test for one bookmaker
 ```bash
-python -m pytest tests/test_bet9ja_e2e.py::TestBet9jaE2E::test_get_league_premier_league -v
+uv run pytest tests/e2e -m live_site -k bet9ja -v
 ```
 
 ## Test Features

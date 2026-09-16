@@ -17,7 +17,8 @@ Run `make check` before you push. It runs the format, lint, type-check, and test
 | format | `uv run ruff format --check .` |
 | lint | `uv run ruff check .` |
 | type-check | `uv run ty check NaijaBet_Api` |
-| test | `uv run pytest tests/ -q --timeout=120 -o log_cli=0 --ignore=tests/test_betking_playwright.py --cov=NaijaBet_Api` |
+| test | `uv run pytest tests/ -q --timeout=120 -o log_cli=0 --cov=NaijaBet_Api` |
+| live | `make live` with Windscribe connected to Lagos; writes `live-run.json` |
 
 The end-to-end tests call the live bookmaker sites. When a site is down, a test fails without a code change. Re-run once before you look for a code defect.
 
