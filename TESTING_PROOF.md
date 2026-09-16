@@ -16,7 +16,7 @@ The suite carries the `live_site` marker and is deselected by default; `make liv
 
 ## Endpoints
 
-The hosts come from a browser session recorded on 2026-09-15 from Lagos (`tests/fixtures/endpoint-provenance.json`; the recorder is `scripts/record_session.py`, see [docs/runbooks/record-session.md](docs/runbooks/record-session.md)). `tests/test_endpoint_provenance.py` fails when the package calls a host the manifest does not record.
+The hosts come from a browser session recorded on 2026-09-15 from a Lagos egress (`tests/fixtures/endpoint-provenance.json`; the recorder is `scripts/record_session.py`, see [docs/runbooks/record-session.md](docs/runbooks/record-session.md)). `tests/test_endpoint_provenance.py` fails when the package calls a host the manifest does not record.
 
 | Bookmaker | API host | Premier League sample | Status on 2026-09-15 |
 |---|---|---|---|
@@ -30,7 +30,7 @@ The former Nairabet host `sports-api.nairabet.com` has no DNS record; the manife
 
 CI run [35125895143](https://github.com/jayteealao/NaijaBet_Api/actions/runs/35125895143), workflow `live.yml`, 2026-09-16T17:04Z, commit `df3e88b`:
 
-- egress proof: `egress country=NG bet9ja=200` (WireGuard tunnel to a Windscribe Lagos exit, `79.127.149.9`, AS212238 Datacamp Limited);
+- egress proof: `egress country=NG bet9ja=200` (WireGuard tunnel to a Windscribe Lagos egress, `79.127.149.9`, AS212238 Datacamp Limited);
 - result: `12 passed, 1 skipped, 84 deselected in 177.81s`;
 - `live-run.json` (uploaded as the `live-run` artifact):
 
@@ -44,13 +44,13 @@ CI run [35125895143](https://github.com/jayteealao/NaijaBet_Api/actions/runs/351
 }
 ```
 
-A maintainer run of `make live` from Windscribe Lagos on 2026-09-16T16:42Z (`79.127.149.6`) passed the same 12 tests in 74.80 s with the same counts: bet9ja 144, betking 144, nairabet 134.
+A maintainer run of `make live` from Windscribe Lagos on 2026-09-16T17:44Z (`79.127.149.6`, commit `df3e88b`) passed the same 12 tests in 74.80 s with the same counts: bet9ja 144, betking 144, nairabet 134. An earlier maintainer run at 16:42Z on commit `0bad3ff` recorded 146, 146, and 136; the counts move with the fixture list.
 
 The first attempt of the earlier run 35124398180 ran before the secret existed; it failed at "Bring up the tunnel" with `WINDSCRIBE_WG_CONF is empty` and skipped the suite, which is the designed fail-closed behaviour.
 
 ## Sample row
 
-One Bet9ja row from the Lagos run of 2026-09-16 (`time` is epoch seconds):
+One Bet9ja row recorded from a Lagos egress on 2026-09-16 (`time` is epoch seconds):
 
 ```json
 {
