@@ -233,10 +233,10 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         pass
 
     def get_nations(self, nation: str):
-        pass
+        raise NotImplementedError("get_nations is not implemented; see the README TODO list")
 
     def get_competitions(self):
-        pass
+        raise NotImplementedError("get_competitions is not implemented; see the README TODO list")
 
     def get_team(self, team: str) -> list[dict]:
         rows = self.get_all()

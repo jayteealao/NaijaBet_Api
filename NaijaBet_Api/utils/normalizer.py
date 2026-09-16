@@ -1,57 +1,56 @@
 import difflib
 import json
+import logging
 import re
 from collections import ChainMap
+from functools import lru_cache
 from pathlib import Path
 
 import arrow
 
-from NaijaBet_Api.utils.logger import get_logger
+logger = logging.getLogger(__name__)
 
-logger = get_logger(__name__)
+_TABLES = ("bet9ja_normalizer.json", "betking_normalizer.json", "nairabet_normalizer.json")
+_ODDS_FIELDS = ("home", "draw", "away", "home_or_draw", "home_or_away", "draw_or_away")
+
+
+def _load(name: str) -> dict:
+    with open(Path(__file__).parent / name, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+@lru_cache(maxsize=None)
+def _tables(pathstr: str) -> ChainMap:
+    """The name tables for one bookmaker: its own file first, then the other two.
+
+    The files are package data and load once per process; call ``_tables.cache_clear()``
+    after editing one at runtime.
+    """
+    return ChainMap(_load(pathstr), *(_load(name) for name in _TABLES if name != pathstr))
+
+
+def _canonical(name: str, tables: ChainMap) -> str:
+    if name in tables:
+        return tables[name]
+    close = difflib.get_close_matches(name, tables.keys(), 1, 0.8)
+    logger.debug("%s not in the normalizer tables; close matches %s", name, close)
+    return tables[close[0]] if close else name
 
 
 def match_normalizer(list, pathstr: str):
-    path = Path(__file__).parent / pathstr
     if list is None:
         return {}
-    data = list[:]
+    tables = _tables(pathstr)
+    data = []
 
-    def helper(string):
-        with open(path, "r") as f:
-            normalizer = json.load(f)
-            try:
-                return normalizer[string]
-            except KeyError:
-                logger.warning(f"{string} not found in {pathstr} normalizer")
-                path_b9 = Path(__file__).parent / "bet9ja_normalizer.json"
-                path_bk = Path(__file__).parent / "betking_normalizer.json"
-                path_nb = Path(__file__).parent / "nairabet_normalizer.json"
-
-                map = ChainMap(
-                    json.load(open(path_b9, "r")), json.load(open(path_bk, "r")), json.load(open(path_nb, "r"))
-                )
-                try:
-                    return map[string]
-                except KeyError:
-                    logger.warning(f"{string} not found in normalizer")
-                    res = difflib.get_close_matches(string, map.keys(), 1, 0.8)
-                    logger.warning(f"found possible matches {res}")
-                    if res:
-                        return map[res[0]]
-                    else:
-                        logger.warning(f"No close matches found for {string}, returning original")
-                        return string
-
-    # List of odds fields that should be converted to floats
-    odds_fields = ["home", "draw", "away", "home_or_draw", "home_or_away", "draw_or_away"]
-
-    for event in data:
+    for event in list:
         teams = event.get("match", None)
         if teams is not None:
-            home, away = re.split(r"\s-\s", teams, maxsplit=1)
-            home = helper(home.strip())
-            away = helper(away.strip())
+            parts = re.split(r"\s-\s", teams, maxsplit=1)
+            if len(parts) != 2:
+                logger.warning("skipping row with unparseable match %r", teams)
+                continue
+            home, away = (_canonical(part.strip(), tables) for part in parts)
             event["match"] = "{0} - {1}".format(home, away)
 
         time = event.get("time", None)
@@ -60,16 +59,16 @@ def match_normalizer(list, pathstr: str):
 
         league = event.get("league", None)
         if league is not None:
-            event["league"] = helper(event["league"])
+            event["league"] = _canonical(league, tables)
 
         # Convert odds fields from strings to floats
-        for field in odds_fields:
+        for field in _ODDS_FIELDS:
             if field in event and event[field] is not None:
                 try:
                     event[field] = float(event[field])
                 except (ValueError, TypeError):
-                    logger.warning(f"Could not convert {field}={event[field]} to float")
-                    pass
+                    logger.warning("Could not convert %s=%r to float", field, event[field])
+        data.append(event)
 
     return data
 
