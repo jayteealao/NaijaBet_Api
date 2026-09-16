@@ -23,7 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlsplit
 
-import requests
+from egress import egress
 
 from NaijaBet_Api.bookmakers import Bet9ja, Betking, Nairabet
 from NaijaBet_Api.id import Betid
@@ -32,14 +32,6 @@ HOST_FILTER = re.compile(r"https://[^/]*(bet9ja\.com|betking\.com|nairabet\.com|
 SITES = {"bet9ja": Bet9ja, "betking": Betking, "nairabet": Nairabet}
 COOKIE_HEADERS = {"cookie", "set-cookie"}
 NAV_TIMEOUT_MS = 60_000
-
-
-def egress() -> dict:
-    """Return ipinfo's view of the current egress."""
-    response = requests.get("https://ipinfo.io/json", timeout=(10, 30))
-    response.raise_for_status()
-    info = response.json()
-    return {key: info.get(key) for key in ("ip", "city", "country", "org")}
 
 
 def headers_of(cls) -> tuple[str | None, dict[str, str]]:

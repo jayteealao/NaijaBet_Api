@@ -7,7 +7,10 @@ and a raw-socket "blackhole" that accepts a connection and never answers.
 
 import json
 import socket
+import subprocess
+import sys
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 
 import brotli
@@ -22,11 +25,37 @@ from NaijaBet_Api.utils import jsonpaths
 from NaijaBet_Api.utils.normalizer import bet9ja_match_normalizer
 
 FIXTURES = Path(__file__).parent / "fixtures"
+REPO = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO / "scripts"))
+
+from egress import egress  # noqa: E402 - shared with scripts/record_session.py
+
+# Per-bookmaker row counts stashed by the live suite; ``--live-record`` writes them out.
+COUNTS = pytest.StashKey[dict]()
 
 
 # Configure pytest-asyncio
 def pytest_configure(config):
     config.addinivalue_line("markers", "asyncio: mark test as an asyncio test")
+
+
+def pytest_addoption(parser):
+    parser.addoption("--live-record", default=None, metavar="PATH", help="write the live-run record to PATH")
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Write the dated record the release override reads: ``make live`` passes ``--live-record``."""
+    path = session.config.getoption("--live-record")
+    if path is None:
+        return
+    record = {
+        "ran-at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "egress": egress(),
+        "bookmakers": dict(session.config.stash.get(COUNTS, {})),
+        "git-sha": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
+        "passed": int(exitstatus) == 0,
+    }
+    Path(path).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
 
 
 @pytest.fixture(scope="session")

@@ -11,6 +11,8 @@ Installation:
 
 import pytest
 
+pytestmark = pytest.mark.live_site
+
 try:
     from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
     from NaijaBet_Api.id import Betid
