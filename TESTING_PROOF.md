@@ -1,198 +1,77 @@
-# ✅ PROOF: Real End-to-End Tests with Live API Responses
+# Live evidence
 
-This document provides irrefutable proof that all E2E tests make **real HTTP requests** to **live betting site APIs** and validate **actual responses**.
+This document records what the live suite proved, when, and from where. The procedure for running the suite and for the release override is in [docs/runbooks/live-suite.md](docs/runbooks/live-suite.md).
 
-## 📡 Live API Endpoints Tested
+## What the live suite proves
 
-### BET9JA (Working ✅)
-```
-Base: https://sports.bet9ja.com
+`tests/e2e/test_live_rows.py` calls `get_all()` on each of Bet9ja, Betking, and Nairabet. For one bookmaker the test passes only when:
 
-Premier League:
-https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID=170880&DISP=0&GROUPMARKETID=1&matches=true
+- no league raised `BookmakerBlockedError` (a 403, a Cloudflare challenge, or an Akamai denial fails the test; the message names the leagues and the wall);
+- the ten leagues together returned at least one row;
+- the first row carries the eleven keys (`match`, `league`, `time`, `league_id`, `match_id`, `home`, `draw`, `away`, `home_or_draw`, `home_or_away`, `draw_or_away`).
 
-La Liga:
-https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID=180928&DISP=0&GROUPMARKETID=1&matches=true
+The assertion is `assert_live_rows` in `tests/e2e/gate.py`. `tests/e2e/test_gate_fails_closed.py` runs the same assertion offline against a bookmaker patched to return zero rows and against one patched to raise a block; both fail and name the bookmaker. The live suite is therefore not able to pass on empty data.
 
-Bundesliga:
-https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID=180923&DISP=0&GROUPMARKETID=1&matches=true
+The suite carries the `live_site` marker and is deselected by default; `make live` runs it and writes `live-run.json`.
 
-Serie A:
-https://sports.bet9ja.com/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID=167856&DISP=0&GROUPMARKETID=1&matches=true
-```
+## Endpoints
 
-### NAIRABET (Working ✅)
-```
-Base: https://sports-api.nairabet.com
+The hosts come from a browser session recorded on 2026-09-15 from Lagos (`tests/fixtures/endpoint-provenance.json`; the recorder is `scripts/record_session.py`, see [docs/runbooks/record-session.md](docs/runbooks/record-session.md)). `tests/test_endpoint_provenance.py` fails when the package calls a host the manifest does not record.
 
-Premier League:
-https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId=EN_PR&limit=10
+| Bookmaker | API host | Premier League sample | Status on 2026-09-15 |
+|---|---|---|---|
+| Bet9ja | `sports.bet9ja.com` | `/desktop/feapi/PalimpsestAjax/GetEventsInGroupV2?GROUPID=170880&DISP=0&GROUPMARKETID=1&matches=true` | 200 |
+| Betking | `sportsapicdn-desktop.betking.com` | `/api/feeds/prematch/en/4/20000841/0/0` | 200 |
+| Nairabet | `sb2frontend-altenar2.biahosted.com` (Altenar widget API) | `/api/widget/GetEvents?...&integration=nairabet&...&champIds=2936` | 200 |
 
-La Liga:
-https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId=ES_PL&limit=10
+The former Nairabet host `sports-api.nairabet.com` has no DNS record; the manifest lists it under `superseded`.
 
-Bundesliga:
-https://sports-api.nairabet.com/v2/events?country=NG&locale=en&group=g3&platform=desktop&sportId=SOCCER&competitionId=DE_BL&limit=10
-```
+## Latest recorded run
 
-### BETKING (Protected by Cloudflare ⚠️)
-```
-Base: https://sportsapicdn-desktop.betking.com
+CI run [35125895143](https://github.com/jayteealao/NaijaBet_Api/actions/runs/35125895143), workflow `live.yml`, 2026-09-16T17:04Z, commit `df3e88b`:
 
-Premier League:
-https://sportsapicdn-desktop.betking.com/api/feeds/prematch/en/4/841/0/0
+- egress proof: `egress country=NG bet9ja=200` (WireGuard tunnel to a Windscribe Lagos exit, `79.127.149.9`, AS212238 Datacamp Limited);
+- result: `12 passed, 1 skipped, 84 deselected in 177.81s`;
+- `live-run.json` (uploaded as the `live-run` artifact):
 
-Note: Returns HTTP 403/503 due to Cloudflare bot protection
-Tests handle this gracefully by returning empty results
-```
-
-## 🔍 Example Real API Response
-
-### Bet9ja Premier League Response
 ```json
 {
-  "match": "Burnley - Newcastle",
+  "ran-at": "2026-09-16T17:08:06+00:00",
+  "egress": { "ip": "79.127.149.9", "city": "Lagos", "country": "NG", "org": "AS212238 Datacamp Limited" },
+  "bookmakers": { "bet9ja": 144, "betking": 144, "nairabet": 134 },
+  "git-sha": "df3e88b77950f92ac62cb08aebb4d82db1bc11c5",
+  "passed": true
+}
+```
+
+A maintainer run of `make live` from Windscribe Lagos on 2026-09-16T16:42Z (`79.127.149.6`) passed the same 12 tests in 74.80 s with the same counts: bet9ja 144, betking 144, nairabet 134.
+
+The first attempt of the earlier run 35124398180 ran before the secret existed; it failed at "Bring up the tunnel" with `WINDSCRIBE_WG_CONF is empty` and skipped the suite, which is the designed fail-closed behaviour.
+
+## Sample row
+
+One Bet9ja row from the Lagos run of 2026-09-16 (`time` is epoch seconds):
+
+```json
+{
+  "match": "Brentford - Chelsea",
   "league": "Premier League",
-  "time": 1767123000,
+  "time": 1789758000,
   "league_id": 170880,
-  "match_id": 700740612,
-  "home": 5.15,
-  "draw": 4.15,
-  "away": 1.64,
-  "home_or_draw": 2.27,
-  "home_or_away": 1.24,
-  "draw_or_away": 1.17
+  "match_id": 831880021,
+  "home": 2.86,
+  "draw": 3.8,
+  "away": 2.32,
+  "home_or_draw": 1.62,
+  "home_or_away": 1.27,
+  "draw_or_away": 1.43
 }
 ```
 
-**Proof this is real:**
-- ✅ Match ID `700740612` is a unique identifier from Bet9ja's system
-- ✅ Timestamp `1767123000` = December 30, 2025 at 3:30 PM UTC (real future match)
-- ✅ Odds are live market values (5.15, 4.15, 1.64)
-- ✅ Response size: 28KB+ of JSON data from API
+## Reproduce
 
-### Nairabet Premier League Response
-```json
-{
-  "match": "Chelsea - Bournemouth",
-  "time": 1767123000,
-  "match_id": "17178260",
-  "home": 1.56,
-  "draw": 4.33,
-  "away": 5.5,
-  "league": "Premier League",
-  "league_id": "EN_PR"
-}
-```
+1. Connect Windscribe to Lagos.
+2. Run `make live`. Expected: `12 passed, 1 skipped` and a new `live-run.json`.
+3. Run `uv run python scripts/check_live_run.py live-run.json`. Expected: `live-run.json accepted: ...` and exit 0.
 
-**Proof this is real:**
-- ✅ Match ID `17178260` is from Nairabet's system
-- ✅ Different odds than Bet9ja (1.56 vs 1.56) - different bookmaker pricing
-- ✅ Different league ID format ("EN_PR" vs 170880)
-- ✅ 10 matches returned per API call (as per limit parameter)
-
-## 📊 Test Execution Evidence
-
-### Test Run Output
-```
-platform linux -- Python 3.11.14, pytest-9.0.2, pluggy-1.6.0
-33 passed in 25.87s
-```
-
-### Test Coverage
-- **Bet9ja**: 10 tests (all passing ✅)
-- **Betking**: 11 tests (all passing ✅)
-- **Nairabet**: 12 tests (all passing ✅)
-
-### Test Types
-1. **Sync API calls** - Regular blocking HTTP requests
-2. **Async API calls** - Non-blocking async HTTP requests
-3. **Data validation** - Verify structure, types, values
-4. **Error handling** - Graceful failure on HTTP errors
-
-## 🔬 How to Verify Yourself
-
-### Test a Single Endpoint
-```bash
-# Test Bet9ja Premier League
-python -m pytest tests/test_bet9ja_e2e.py::TestBet9jaE2E::test_get_league_premier_league -v -s
-
-# Test Nairabet La Liga
-python -m pytest tests/test_nairabet_e2e.py::TestNairabetE2E::test_get_league_la_liga -v -s
-```
-
-### Manual API Call
-```python
-from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
-from NaijaBet_Api.id import Betid
-
-# This makes a REAL HTTP request
-b9 = Bet9ja()
-data = b9.get_league(Betid.PREMIERLEAGUE)
-
-# You'll get back real match data
-print(f"Got {len(data)} matches")
-print(f"First match: {data[0]}")
-```
-
-### Network Trace
-```python
-import requests
-
-# Patch requests to show network activity
-original_get = requests.Session.get
-
-
-def traced_get(self, *args, **kwargs):
-    url = kwargs.get("url") or args[0]
-    print(f"📡 HTTP GET: {url}")
-    result = original_get(self, *args, **kwargs)
-    print(f"   Status: {result.status_code}, Size: {len(result.content)} bytes")
-    return result
-
-
-requests.Session.get = traced_get
-
-# Now run the API call - you'll see real network traffic
-from NaijaBet_Api.bookmakers.bet9ja import Bet9ja
-
-b9 = Bet9ja()
-data = b9.get_league(Betid.PREMIERLEAGUE)
-```
-
-## 🐛 Bugs Found by Real Testing
-
-These bugs were **only discovered** because tests hit real APIs:
-
-1. **Odds as strings** - API returned `"5.15"` not `5.15`
-2. **Unknown team crash** - Teams not in normalizer caused IndexError
-3. **Unclosed sessions** - Async sessions weren't being closed
-4. **JSON decode errors** - HTTP 403/503 caused crashes
-5. **Missing headers** - APIs blocked requests without proper User-Agent
-
-**None of these would have been found with mocked tests!**
-
-## ✅ Proof Summary
-
-| Evidence | Type | Location |
-|----------|------|----------|
-| Real URLs | Code | `NaijaBet_Api/id.py:50-73` |
-| HTTP Requests | Tests | `tests/test_*_e2e.py` |
-| Live Data | Output | Match IDs, timestamps, odds |
-| Network Traffic | Observable | 28KB+ JSON per request |
-| Bug Fixes | Code | `normalizer.py`, `BaseClass.py` |
-| Test Results | Pass Rate | 33/33 (100%) |
-
-## 🎯 Conclusion
-
-**All tests make real HTTP requests to live betting site APIs.**
-
-- ✅ No mocks
-- ✅ No stubs
-- ✅ No fakes
-- ✅ Real network traffic
-- ✅ Real API responses
-- ✅ Real data validation
-- ✅ Real bugs found and fixed
-
-This is **true end-to-end testing** that validates the library works against actual production APIs.
+The `live` workflow also runs every Monday at 06:00 UTC; the latest runs are at [actions/workflows/live.yml](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/live.yml). Each release run calls the same workflow before it builds.
