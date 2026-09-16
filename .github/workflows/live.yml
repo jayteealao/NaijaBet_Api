@@ -55,10 +55,14 @@ jobs:
           printf '%s\n' "$WG_CONF" | sed -e '/^DNS *=/d' -e 's/, *::\/0//' | sudo tee /etc/wireguard/wg0.conf >/dev/null
           sudo chmod 600 /etc/wireguard/wg0.conf
           sudo wg-quick up wg0
+      # Akamai answers curl's own User-Agent with 403 from every egress, and the bare root
+      # redirects to sports.bet9ja.com; the probe therefore asks the sports host as a browser.
       - name: Prove the egress
+        env:
+          UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36
         run: |
           COUNTRY="$(curl -sS --max-time 30 https://ipinfo.io/country | tr -d '[:space:]')"
-          CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 https://bet9ja.com)"
+          CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 30 -A "$UA" https://sports.bet9ja.com/)"
           echo "egress country=$COUNTRY bet9ja=$CODE"
           [ "$COUNTRY" = NG ] && [ "$CODE" = 200 ]
       - name: Live suite
