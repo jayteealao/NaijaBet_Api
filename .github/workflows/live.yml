@@ -10,6 +10,14 @@ on:
       WINDSCRIBE_WG_CONF:
         required: true
   workflow_dispatch:
+  # A change to the gate proves itself on the branch that carries it; workflow_dispatch resolves
+  # only a file that exists on the default branch.
+  push:
+    paths:
+      - .github/workflows/live.yml
+      - tests/e2e/**
+      - tests/conftest.py
+      - scripts/egress.py
   schedule:
     - cron: '0 6 * * 1'
 
