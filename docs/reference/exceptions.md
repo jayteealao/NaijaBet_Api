@@ -2,13 +2,13 @@
 
 Every fetch method of a bookmaker (`get_league`, `get_all`, `get_team`, `async_get_league`, `async_get_all`) returns a list of rows or raises one of the classes below. An empty list means the bookmaker answered with zero fixtures for that league; it never means a failure. All classes live in `NaijaBet_Api.exceptions` and are re-exported from the `NaijaBet_Api` package.
 
-`get_all` and `async_get_all` fetch the ten leagues and record each failed league in `bookmaker.errors`, a `dict[Betid, NaijaBetError]`. They raise only when every league failed. After a call, read `bookmaker.errors` to see which leagues were skipped and why.
+`get_all` and `async_get_all` fetch the ten leagues and record each failed league in `bookmaker.errors`, a `dict[Betid, NaijaBetError]`. They raise only when every league failed. After a call, read `bookmaker.errors` to see which leagues failed and why.
 
 ## NaijaBetError
 
 Base: `Exception`.
 
-Fields: `bookmaker` (the site name: `bet9ja`, `betking`, `nairabet`), `message`.
+Fields: `bookmaker` (the bookmaker name: `bet9ja`, `betking`, `nairabet`), `message`.
 
 Raised directly by `get_all` and `async_get_all` when all ten leagues failed; the message reads `all 10 leagues failed; see .errors`, and `bookmaker.errors` holds the cause per league. Catch this class to handle every library failure in one place.
 
@@ -32,7 +32,7 @@ Raised when no HTTP response arrived: DNS failure, refused connection, or a tran
 
 Base: `BookmakerUnreachableError`, `TimeoutError`.
 
-Fields: `bookmaker`, `message` (names the `(connect, read)` timeout that elapsed).
+Fields: `bookmaker`, `message` (`timed out after (connect, read) s`, with the configured pair).
 
 Raised when the connect timeout or the read timeout elapsed before a response arrived. The timeout comes from the constructor: `Bet9ja(timeout=(10, 30))` is the default, in seconds. A timeout is not retried. Because the class also subclasses the built-in `TimeoutError`, an `except TimeoutError:` clause catches it.
 
@@ -42,7 +42,7 @@ Base: `NaijaBetError`.
 
 Fields: `bookmaker`, `message`.
 
-Raised when the bookmaker answered 200 but the body is not the JSON shape the normalizer expects. A parse failure is not retried.
+Raised when the bookmaker answered 200 but the body is not the JSON shape the normalizer expects, and on the async transport when the response body cannot be decoded. The messages are `response is not JSON`, `response shape not recognised`, `validator path missing from response`, and `response body could not be decoded: <cause>`. A parse failure is not retried.
 
 ## Wall values
 

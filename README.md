@@ -16,7 +16,7 @@ pip install NaijaBet_Api
 
 The `brotli` package is installed as a dependency; the Nairabet API compresses its answers with Brotli.
 
-The bookmakers answer requests from a Nigerian egress. From another country Bet9ja and Betking answer 403, and the library raises `BookmakerBlockedError` (see [Failure contract](#failure-contract)). Connect through a Nigerian VPN exit, or use `BetkingPlaywright` for Betking (see [Betking from outside Nigeria](#betking-from-outside-nigeria)).
+The bookmakers answer requests from a Nigerian egress. From any other egress Bet9ja and Betking answer 403, and the library raises `BookmakerBlockedError` (see [Failure contract](#failure-contract)). Connect through a Nigerian egress, or use `BetkingPlaywright` for Betking (see [Betking from outside Nigeria](#betking-from-outside-nigeria)).
 
 ## Quick start
 
@@ -60,7 +60,7 @@ arsenal = nairabet.get_team("Arsenal")
 
 An empty list means the bookmaker listed no fixtures for that league. A failure never returns an empty list; it raises.
 
-The endpoints come from a recorded browser session (`tests/fixtures/endpoint-provenance.json`). Bet9ja answers from `sports.bet9ja.com`, Betking from `sportsapicdn-desktop.betking.com`, and Nairabet from its Altenar widget API at `sb2frontend-altenar2.biahosted.com`; the former `sports-api.nairabet.com` host no longer resolves.
+The endpoints come from a recording made in a browser (`tests/fixtures/endpoint-provenance.json`). Bet9ja answers from `sports.bet9ja.com`, Betking from `sportsapicdn-desktop.betking.com`, and Nairabet from its Altenar widget API at `sb2frontend-altenar2.biahosted.com`; the former `sports-api.nairabet.com` host no longer resolves.
 
 ## Failure contract
 
@@ -73,7 +73,7 @@ Every fetch raises a subclass of `NaijaBetError`:
 | `BookmakerTimeoutError` | The connect or read timeout elapsed. Also a `TimeoutError`. |
 | `ResponseParseError` | The bookmaker answered 200 with a body the normalizer does not recognise. |
 
-`get_all` and `async_get_all` fetch the ten leagues, record each failed league in `bookmaker.errors` (a `dict[Betid, NaijaBetError]`), and raise `NaijaBetError` only when every league failed. The library retries once, after one second, for a transport error or a 5xx status; nothing else is retried.
+`get_all` and `async_get_all` fetch the ten leagues, record each failed league in `bookmaker.errors` (a `dict[Betid, NaijaBetError]`), and raise `NaijaBetError` only when every league failed. The library retries once, after one second, for a refused or dropped connection and for a 5xx status; a timeout, a 4xx status, and a parse failure are not retried.
 
 ```python
 from NaijaBet_Api import BookmakerBlockedError, BookmakerTimeoutError
@@ -90,7 +90,7 @@ Each class, its fields, the wall values, and the retry rule are in [docs/referen
 
 ## Sessions
 
-The constructor makes no network call. `timeout=(connect, read)` in seconds applies to every request on both transports; the default is `(10, 30)`. The blocking session is created on the first fetch and reused across leagues; `close()` releases it. The async methods share one `aiohttp` session across the ten leagues; `aclose()` releases it. A caller-supplied `async_session` is used as given and never closed.
+The constructor makes no network call. `timeout=(connect, read)` in seconds applies to every request on both transports; the default is `(10, 30)`. The blocking session is created on the first fetch and reused across leagues; `close()` releases it. The async methods share one `aiohttp` session across the ten leagues; `aclose()` releases it. A caller-supplied `async_session` is used as given and never closed. `BetkingPlaywright` is the exception: its `timeout` is one integer of milliseconds for the page, and the browser is released by the context manager or `_stop_browser()`, not by `close()`.
 
 ```python
 import asyncio
@@ -125,7 +125,7 @@ with BetkingPlaywright() as betking:
     rows = betking.get_league(Betid.PREMIERLEAGUE)
 ```
 
-`BetkingPlaywright` is synchronous only: `async_get_league`, `async_get_all`, and `async_session` raise `NotImplementedError`. Failures raise the same exceptions as the other bookmakers. See [BETKING_BROWSER_AUTOMATION.md](BETKING_BROWSER_AUTOMATION.md) and [examples/betking_playwright_example.py](examples/betking_playwright_example.py).
+`BetkingPlaywright` is synchronous only: `async_get_league`, `async_get_all`, and `async_session` raise `NotImplementedError`. A non-200 answer raises `BookmakerBlockedError` and a bad body raises `ResponseParseError`, as for the other bookmakers; a browser transport failure or a Playwright timeout raises Playwright's own error, which `get_all` does not record in `errors`. See [BETKING_BROWSER_AUTOMATION.md](BETKING_BROWSER_AUTOMATION.md) and [examples/betking_playwright_example.py](examples/betking_playwright_example.py).
 
 ## Live gate
 
@@ -133,7 +133,7 @@ Every release runs the live suite against the three bookmakers from a Lagos egre
 
 ## Changes since 0.3
 
-Version 0.4.0 removed `sportybet_payload`, the `nairabetDNB` key, and the `python -m NaijaBet_Api` entry point; `session_type` is still accepted by the constructor and ignored (a `DeprecationWarning` is emitted). A failed fetch raises a typed exception; the empty-list signal of 0.3 is gone. The changelog carries the detail per version.
+Version 0.4.0, the release after 0.3.1, removes `sportybet_payload`, the `nairabetDNB` key, and the `python -m NaijaBet_Api` entry point; `session_type` is still accepted by the constructor and ignored (a `DeprecationWarning` is emitted). A failed fetch raises a typed exception; the empty-list signal of 0.3 is gone. The changelog carries the detail per version.
 
 ## TODO
 
