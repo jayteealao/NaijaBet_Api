@@ -9,6 +9,7 @@ import pytest
 import requests
 from urllib3.util import connection as urllib3_connection
 
+import NaijaBet_Api.bookmakers.BaseClass as base_module
 from NaijaBet_Api import (
     BookmakerBlockedError,
     BookmakerTimeoutError,
@@ -99,6 +100,41 @@ def test_unreachable_closed_port(stub, point_at, closed_port, no_retry_sleep, mo
     assert no_retry_sleep[0] == [1.0]
 
 
+def test_connect_timeout_retries_then_succeeds(stub, league_routes, no_retry_sleep):
+    league_routes()
+    bookmaker = stub()
+    bookmaker._warmed["sync"] = True
+    real_get = bookmaker.session.get
+    calls = []
+
+    def flaky_get(url, *args, **kwargs):
+        calls.append(url)
+        if len(calls) == 1:
+            raise requests.exceptions.ConnectTimeout("connect timed out")
+        return real_get(url, *args, **kwargs)
+
+    bookmaker.session.get = flaky_get
+    rows = bookmaker.get_league()
+    assert len(rows) == 3
+    assert len(calls) == 2
+    assert no_retry_sleep[0] == [1.0]
+
+
+def test_connect_timeout_twice_raises_unreachable(stub, league_routes, no_retry_sleep):
+    league_routes()
+    bookmaker = stub()
+    bookmaker._warmed["sync"] = True
+
+    def always_connect_timeout(url, *args, **kwargs):
+        raise requests.exceptions.ConnectTimeout("connect timed out")
+
+    bookmaker.session.get = always_connect_timeout
+    with pytest.raises(BookmakerUnreachableError) as info:
+        bookmaker.get_league()
+    assert not isinstance(info.value, BookmakerTimeoutError)
+    assert no_retry_sleep[0] == [1.0]
+
+
 def test_timeout_short_sync(stub, point_at, blackhole):
     point_at(blackhole)
     start = time.perf_counter()
@@ -185,6 +221,19 @@ async def test_async_get_all_one_session(stub, league_routes, league_log, monkey
     assert constructions[0].closed is True
 
 
+async def test_async_get_all_warms_once(stub, league_routes, httpserver):
+    """PERF-1 regression: the ten concurrent league tasks must share one warm-up GET."""
+    league_routes()
+    bookmaker = stub()
+    try:
+        rows = await bookmaker.async_get_all()
+        assert len(rows) == 3 * len(Betid)
+        home_requests = [req for req, _ in httpserver.log if req.path == "/"]
+        assert len(home_requests) == 1
+    finally:
+        await bookmaker.aclose()
+
+
 async def test_caller_session_not_closed(stub, league_routes):
     league_routes()
     own = aiohttp.ClientSession()
@@ -233,6 +282,41 @@ def test_all_fail_raises(stub, league_routes, no_retry_sleep):
     with pytest.raises(NaijaBetError):
         bookmaker.get_all()
     assert len(bookmaker.errors) == len(Betid)
+
+
+def test_get_all_fans_out_leagues(stub, league_routes, httpserver):
+    """PERF-2 regression: get_all() fans the ten leagues out instead of retrying them one after
+    another, so the retry sleeps overlap instead of stacking up."""
+    league_routes(status=500, body="boom")
+    bookmaker = stub()
+    start = time.perf_counter()
+    with pytest.raises(NaijaBetError):
+        bookmaker.get_all()
+    elapsed = time.perf_counter() - start
+    assert elapsed < 4.0  # sequential retries need at least 10 * 1.0 s
+    assert len(bookmaker.errors) == len(Betid)
+    home_requests = [req for req, _ in httpserver.log if req.path == "/"]
+    assert len(home_requests) == 1
+
+
+async def test_async_get_league_parses_off_loop(stub, league_routes, monkeypatch):
+    """PERF-3 regression: the async path offloads ``_parse`` to a worker thread via ``asyncio.to_thread``."""
+    league_routes()
+    calls = []
+    real_to_thread = base_module.asyncio.to_thread
+
+    async def counting_to_thread(func, *args, **kwargs):
+        calls.append((func, args, kwargs))
+        return await real_to_thread(func, *args, **kwargs)
+
+    monkeypatch.setattr(base_module.asyncio, "to_thread", counting_to_thread)
+    bookmaker = stub()
+    try:
+        rows = await bookmaker.async_get_league(Betid.PREMIERLEAGUE)
+    finally:
+        await bookmaker.aclose()
+    assert len(calls) == 1
+    assert len(rows) == 3
 
 
 async def test_all_fail_raises_async(stub, league_routes, no_retry_sleep):

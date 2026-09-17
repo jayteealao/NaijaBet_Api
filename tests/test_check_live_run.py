@@ -37,6 +37,14 @@ def test_eight_day_record_is_rejected_with_its_age():
     assert check(record(8), NOW) == "live-run.json is 8 days old; the override accepts at most 7"
 
 
+def test_future_record_is_rejected():
+    assert check(record(-1 / 24), NOW) == "ran-at is in the future"
+
+
+def test_one_minute_ago_record_is_accepted():
+    assert check(record(1 / 1440), NOW) is None
+
+
 def test_missing_bookmaker_is_named():
     assert check(record(1, bookmakers={"bet9ja": 118, "nairabet": 118}), NOW) == "bookmakers lacks betking"
 
@@ -56,6 +64,29 @@ def test_naive_timestamp_is_rejected():
     assert "timezone" in check(record(1, **{"ran-at": "2026-09-16T10:00:00"}), NOW)
 
 
+def test_matching_git_sha_is_accepted():
+    assert check(record(1), NOW, "0bad3fffa3d3cc3be96ac7ab6b514459afefdf00") is None
+
+
+def test_mismatched_git_sha_is_rejected():
+    reason = check(record(1), NOW, "ffffffffffffffffffffffffffffffffffffffff")
+
+    assert reason == (
+        "git-sha 0bad3fffa3d3cc3be96ac7ab6b514459afefdf00 does not match the released commit "
+        "ffffffffffffffffffffffffffffffffffffffff"
+    )
+
+
+def test_short_expected_sha_matches_by_prefix():
+    assert check(record(1), NOW, "0bad3ff") is None
+
+
+def test_short_recorded_sha_matches_by_prefix():
+    short = record(1, **{"git-sha": "0bad3ff"})
+
+    assert check(short, NOW, "0bad3fffa3d3cc3be96ac7ab6b514459afefdf00") is None
+
+
 def test_cli_reads_stdin_and_a_path(tmp_path):
     fresh = record(0)
     fresh["ran-at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
@@ -68,3 +99,18 @@ def test_cli_reads_stdin_and_a_path(tmp_path):
 
     assert accepted.returncode == 0 and accepted.stdout.startswith("live-run.json accepted: ran-at ")
     assert rejected.returncode == 1 and "days old" in rejected.stderr
+
+
+def test_cli_rejects_a_mismatched_expected_sha():
+    fresh = record(0)
+    fresh["ran-at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "-", "ffffffffffffffffffffffffffffffffffffffff"],
+        input=json.dumps(fresh),
+        capture_output=True,
+        text=True,
+        cwd=REPO,
+    )
+
+    assert result.returncode == 1
+    assert "does not match the released commit" in result.stderr

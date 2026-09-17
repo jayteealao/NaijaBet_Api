@@ -21,9 +21,21 @@ import logging
 from typing import Any, Dict, List, NoReturn, Optional
 
 import aiohttp
-from playwright.sync_api import Browser, BrowserContext, Page, sync_playwright
+from playwright.sync_api import (
+    Browser,
+    BrowserContext,
+    Page,
+    sync_playwright,
+)
+from playwright.sync_api import (
+    Error as PlaywrightError,
+)
+from playwright.sync_api import (
+    TimeoutError as PlaywrightTimeoutError,
+)
 
 from NaijaBet_Api.bookmakers.betking import Betking
+from NaijaBet_Api.exceptions import BookmakerTimeoutError, BookmakerUnreachableError
 from NaijaBet_Api.id import Betid
 
 logger = logging.getLogger(__name__)
@@ -53,7 +65,7 @@ class BetkingPlaywright(Betking):
             headless: Run browser in headless mode (default: True)
             timeout: Request timeout in milliseconds (default: 30000)
         """
-        super().__init__()
+        super().__init__(timeout=(timeout / 1000, timeout / 1000))
         self.site = self._site
         self.headless = headless
         self.timeout = timeout
@@ -118,7 +130,7 @@ class BetkingPlaywright(Betking):
         if status == 200:
             logger.info("Browser session established")
         else:
-            logger.warning("betking answered %s on browser start", status)
+            logger.warning("%s answered %s on browser start", self.site, status)
 
     def _stop_browser(self):
         """Stop Playwright browser and clean up"""
@@ -147,6 +159,8 @@ class BetkingPlaywright(Betking):
 
         Raises:
             BookmakerBlockedError: the bookmaker answered with a non-200 status.
+            BookmakerUnreachableError: no response arrived; its ``BookmakerTimeoutError``
+                subclass means the timeout elapsed.
             ResponseParseError: the body is not the expected JSON shape.
         """
         if self.browser is None:
@@ -155,8 +169,13 @@ class BetkingPlaywright(Betking):
             raise RuntimeError("Browser page is not started; call _start_browser() first")
 
         api_url = league.to_endpoint(self.site)
-        logger.info("fetching %s", api_url)
-        response = self.page.request.get(api_url)
+        logger.debug("fetching %s", api_url)
+        try:
+            response = self.page.request.get(api_url, timeout=self.timeout)
+        except PlaywrightTimeoutError as exc:
+            raise BookmakerTimeoutError(self.site, f"timed out after {self.timeout} ms") from exc
+        except PlaywrightError as exc:
+            raise BookmakerUnreachableError(self.site, str(exc)) from exc
         body = response.text()
         if response.status != 200:
             raise self._blocked(response.status, body)

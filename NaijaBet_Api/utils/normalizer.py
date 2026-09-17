@@ -14,6 +14,7 @@ _TABLES = ("bet9ja_normalizer.json", "betking_normalizer.json", "nairabet_normal
 _ODDS_FIELDS = ("home", "draw", "away", "home_or_draw", "home_or_away", "draw_or_away")
 
 
+@lru_cache(maxsize=None)
 def _load(name: str) -> dict:
     with open(Path(__file__).parent / name, "r", encoding="utf-8") as handle:
         return json.load(handle)

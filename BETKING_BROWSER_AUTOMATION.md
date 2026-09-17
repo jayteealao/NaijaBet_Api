@@ -27,7 +27,7 @@ with BetkingPlaywright() as betking:
     arsenal = betking.get_team("Arsenal")
 ```
 
-- `BetkingPlaywright(headless=True, timeout=30000)`: `headless=False` shows the browser window; `timeout` is the page's default timeout in milliseconds; it applies to the first visit to `betking.com/sports`. A league fetch goes through the browser context's request client, which keeps Playwright's default of 30 000 ms.
+- `BetkingPlaywright(headless=True, timeout=30000)`: `headless=False` shows the browser window; `timeout`, in milliseconds, applies to the first visit to `betking.com/sports` and to every league request.
 - The context manager starts the browser on entry and stops it on exit. Without the context manager, the first `get_league` call starts the browser; call `_stop_browser()` to release it.
 - One browser serves every call on the instance; `get_all` fetches the ten leagues through the same page.
 - The rows have the same eleven keys as the other bookmakers; `time` is epoch seconds.

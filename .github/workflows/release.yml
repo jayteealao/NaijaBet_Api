@@ -49,6 +49,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: uv sync --group dev
+      - name: Install the Chromium build for the offline browser test
+        run: uv run playwright install --with-deps chromium
       - name: Test
         run: uv run pytest tests/ -q --timeout=120 -o log_cli=0
 
@@ -57,7 +59,8 @@ jobs:
   live:
     if: ${{ github.event_name == 'push' || inputs.live-run-json == '' }}
     uses: ./.github/workflows/live.yml
-    secrets: inherit
+    secrets:
+      WINDSCRIBE_WG_CONF: ${{ secrets.WINDSCRIBE_WG_CONF }}
 
   check-override:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.live-run-json != '' }}
@@ -67,10 +70,11 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          ref: ${{ env.RELEASE_TAG }}
       - name: Validate the owner-run live record
         env:
           LIVE_RUN_JSON: ${{ inputs.live-run-json }}
-        run: printf '%s' "$LIVE_RUN_JSON" | python3 scripts/check_live_run.py -
+        run: printf '%s' "$LIVE_RUN_JSON" | python3 scripts/check_live_run.py - "$(git rev-parse HEAD)"
 
   build:
     needs: [test, live, check-override]

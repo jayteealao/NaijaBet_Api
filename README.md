@@ -73,7 +73,7 @@ Every fetch raises a subclass of `NaijaBetError`:
 | `BookmakerTimeoutError` | The connect or read timeout elapsed. Also a `TimeoutError`. |
 | `ResponseParseError` | The bookmaker answered 200 with a body the normalizer does not recognise. |
 
-`get_all` and `async_get_all` fetch the ten leagues, record each failed league in `bookmaker.errors` (a `dict[Betid, NaijaBetError]`), and raise `NaijaBetError` only when every league failed. The library retries once, after one second, for a refused or dropped connection and for a 5xx status; a timeout, a 4xx status, and a parse failure are not retried.
+`get_all` and `async_get_all` fetch the ten leagues, record each failed league in `bookmaker.errors` (a `dict[Betid, NaijaBetError]`), and raise `NaijaBetError` only when every league failed. The library retries once, after one second, for a refused or dropped connection and for a 5xx status; a timeout, a 4xx status, and a parse failure are not retried. `BetkingPlaywright` does not retry: its single browser request raises on the first non-200 answer.
 
 ```python
 from NaijaBet_Api import BookmakerBlockedError, BookmakerTimeoutError
@@ -90,7 +90,7 @@ Each class, its fields, the wall values, and the retry rule are in [docs/referen
 
 ## Sessions
 
-The constructor makes no network call. `timeout=(connect, read)` in seconds applies to every request on both transports; the default is `(10, 30)`. The blocking session is created on the first fetch and reused across leagues; `close()` releases it. The async methods share one `aiohttp` session across the ten leagues; `aclose()` releases it. A caller-supplied `async_session` is used as given and never closed. `BetkingPlaywright` is the exception: its `timeout` is one integer of milliseconds for the page, and the browser is released by the context manager or `_stop_browser()`, not by `close()`.
+The constructor makes no network call. `timeout=(connect, read)` in seconds applies to every request on both transports; the default is `(10, 30)`. The blocking session is created on the first fetch and reused across leagues; `close()` releases it. The async methods share one `aiohttp` session across the ten leagues; `aclose()` releases it. A caller-supplied `async_session` is used as given and never closed. `BetkingPlaywright` is the exception: its `timeout`, one integer of milliseconds, applies to the first page visit and to every league request; the browser is released by the context manager or `_stop_browser()`, not by `close()`.
 
 ```python
 import asyncio

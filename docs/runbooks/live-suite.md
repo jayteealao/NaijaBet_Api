@@ -60,10 +60,11 @@ The override is for one case: the live job in the release run failed for an egre
 
 Conditions the workflow enforces (`scripts/check_live_run.py`):
 
-- `ran-at` is at most 7 days old and carries a timezone;
+- `ran-at` is at most 7 days old, carries a timezone, and is not in the future;
 - `bookmakers` has an integer above zero for `bet9ja`, `betking`, and `nairabet`;
 - `passed` is `true`;
-- `git-sha` is present.
+- `git-sha` is present;
+- `git-sha` equals the commit of the released tag.
 
 1. Run `make live` from Lagos and check the record (previous section).
 2. Confirm the tag exists on `origin`: `git ls-remote --tags origin vX.Y.Z` prints one line.
@@ -86,7 +87,7 @@ Conditions the workflow enforces (`scripts/check_live_run.py`):
 
 ## Rotate the key
 
-The release procedure treats a secret older than 90 days as stale. Rotate before day 90:
+Rotate the key every 90 days. No workflow checks the age of the secret; the maintainer tracks the date.
 
 1. Generate a new config file for Lagos in Windscribe (section "Create the tunnel secret", steps 1 and 2).
 2. Set the secret from the new config file (section "Create the tunnel secret", step 3).

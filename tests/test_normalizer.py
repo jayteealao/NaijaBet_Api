@@ -6,7 +6,13 @@ from collections import Counter
 from pathlib import Path
 
 from NaijaBet_Api.utils import normalizer
-from NaijaBet_Api.utils.normalizer import _tables, bet9ja_match_normalizer, nairabet_match_normalizer
+from NaijaBet_Api.utils.normalizer import (
+    _load,
+    _tables,
+    bet9ja_match_normalizer,
+    betking_match_normalizer,
+    nairabet_match_normalizer,
+)
 
 LOGGER = "NaijaBet_Api.utils.normalizer"
 TABLE_DIR = Path(normalizer.__file__).parent
@@ -30,6 +36,7 @@ def test_malformed_row_is_skipped_with_one_warning(caplog):
 
 def test_tables_open_each_json_file_at_most_once(monkeypatch):
     _tables.cache_clear()
+    _load.cache_clear()
     opened: Counter = Counter()
     real_open = builtins.open
 
@@ -43,6 +50,28 @@ def test_tables_open_each_json_file_at_most_once(monkeypatch):
     result = bet9ja_match_normalizer(_rows(200))
 
     assert len(result) == 200
+    assert set(opened) == {"bet9ja_normalizer.json", "betking_normalizer.json", "nairabet_normalizer.json"}
+    assert max(opened.values()) == 1
+
+
+def test_tables_open_each_json_file_at_most_once_across_sites(monkeypatch):
+    _tables.cache_clear()
+    _load.cache_clear()
+    opened: Counter = Counter()
+    real_open = builtins.open
+
+    def counting_open(file, *args, **kwargs):
+        if str(file).endswith(".json"):
+            opened[Path(file).name] += 1
+        return real_open(file, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "open", counting_open)
+
+    bet9ja_result = bet9ja_match_normalizer(_rows(50))
+    betking_result = betking_match_normalizer(_rows(50))
+
+    assert len(bet9ja_result) == 50
+    assert len(betking_result) == 50
     assert set(opened) == {"bet9ja_normalizer.json", "betking_normalizer.json", "nairabet_normalizer.json"}
     assert max(opened.values()) == 1
 
