@@ -18,8 +18,20 @@ REPO = Path(__file__).resolve().parent.parent
 README = REPO / "README.md"
 REFERENCE = REPO / "docs" / "reference" / "exceptions.md"
 EXAMPLE = re.compile(r"<!-- example:start -->\s*```python\n(.*?)```\s*<!-- example:end -->", re.S)
+# The Akamai page as sports.bet9ja.com served it on 2026-09-17; the entities are the real encoding.
 DENIED_BODY = (
-    "<html><body>Access Denied\nYou don't have permission to access this page.\nReference #18.6f1</body></html>"
+    "<HTML><HEAD>\n"
+    "<TITLE>Access Denied</TITLE>\n"
+    "</HEAD><BODY>\n"
+    "<H1>Access Denied</H1>\n"
+    " \n"
+    "You don't have permission to access "
+    '"http&#58;&#47;&#47;sports&#46;bet9ja&#46;com&#47;desktop&#47;feapi&#47;PalimpsestAjax&#47;GetSports&#63;"'
+    " on this server.<P>\n"
+    "Reference&#32;&#35;18&#46;b8fd317&#46;1789664171&#46;1360c987\n"
+    "<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;b8fd317&#46;1789664171&#46;1360c987</P>\n"
+    "</BODY>\n"
+    "</HTML>\n"
 )
 FAILURE_WORDS = ("fail", "error", "block", "down", "unavailable")
 

@@ -13,7 +13,21 @@ import pytest
 from NaijaBet_Api import BookmakerBlockedError, BookmakerTimeoutError
 from NaijaBet_Api.id import Betid
 
-DENIED_BODY = "Access Denied. You don't have permission to access this page. Reference #18.6f1"
+# The Akamai page as sports.bet9ja.com served it on 2026-09-17; the entities are the real encoding.
+DENIED_BODY = (
+    "<HTML><HEAD>\n"
+    "<TITLE>Access Denied</TITLE>\n"
+    "</HEAD><BODY>\n"
+    "<H1>Access Denied</H1>\n"
+    " \n"
+    "You don't have permission to access "
+    '"http&#58;&#47;&#47;sports&#46;bet9ja&#46;com&#47;desktop&#47;feapi&#47;PalimpsestAjax&#47;GetSports&#63;"'
+    " on this server.<P>\n"
+    "Reference&#32;&#35;18&#46;b8fd317&#46;1789664171&#46;1360c987\n"
+    "<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;b8fd317&#46;1789664171&#46;1360c987</P>\n"
+    "</BODY>\n"
+    "</HTML>\n"
+)
 
 
 async def test_charter_steps_1_to_6(stub, league_routes, league_log, httpserver, point_at, blackhole, no_retry_sleep):
