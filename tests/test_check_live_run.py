@@ -22,6 +22,7 @@ def record(days_old: float, **overrides) -> dict:
         "ran-at": (NOW - timedelta(days=days_old)).isoformat(timespec="seconds"),
         "egress": {"ip": "79.127.149.13", "city": "Lagos", "country": "NG", "org": "Datacamp Limited"},
         "bookmakers": {"bet9ja": 118, "betking": 118, "nairabet": 118},
+        "expected": ["bet9ja", "betking", "nairabet"],
         "git-sha": "0bad3fffa3d3cc3be96ac7ab6b514459afefdf00",
         "passed": True,
     }
@@ -43,6 +44,19 @@ def test_future_record_is_rejected():
 
 def test_one_minute_ago_record_is_accepted():
     assert check(record(1 / 1440), NOW) is None
+
+
+def test_narrowed_expected_is_rejected_and_named():
+    reason = check(record(1, expected=["betking", "nairabet"]), NOW)
+
+    assert reason == "expected lacks bet9ja; a narrowed local run cannot serve as the release override"
+
+
+def test_record_without_expected_is_accepted():
+    rec = record(1)
+    del rec["expected"]
+
+    assert check(rec, NOW) is None
 
 
 def test_missing_bookmaker_is_named():

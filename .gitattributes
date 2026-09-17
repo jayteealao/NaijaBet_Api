@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+# The container files run under Linux bash; keep LF on every checkout.
+docker/** text eol=lf
+.env.live.example text eol=lf

@@ -88,6 +88,7 @@ celerybeat-schedule
 
 # Environments
 .env
+.env.live
 .venv
 env/
 venv/
@@ -123,3 +124,4 @@ dmypy.json
 
 # Per-run record written by `make live`; the release override consumes it, never git.
 live-run.json
+live-run-proxy.json
