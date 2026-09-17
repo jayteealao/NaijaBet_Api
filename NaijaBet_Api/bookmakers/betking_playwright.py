@@ -35,7 +35,7 @@ from playwright.sync_api import (
 )
 
 from NaijaBet_Api.bookmakers.betking import Betking
-from NaijaBet_Api.exceptions import BookmakerTimeoutError, BookmakerUnreachableError
+from NaijaBet_Api.exceptions import BookmakerTimeoutError, BookmakerUnreachableError, NaijaBetError
 from NaijaBet_Api.id import Betid
 
 logger = logging.getLogger(__name__)
@@ -181,7 +181,35 @@ class BetkingPlaywright(Betking):
             raise self._blocked(response.status, body)
         return self._parse(body)
 
-    # The inherited get_all and get_team call get_league, so they drive the browser as well.
+    def get_all(self) -> List[Dict[str, Any]]:
+        """Return the rows of every league, fetched serially on the calling thread.
+
+        The base class's ``get_all`` fans the leagues out across a
+        ``ThreadPoolExecutor``, but sync Playwright binds its driver to the thread
+        that started it: a call from a worker thread raises
+        ``greenlet.error: Cannot switch to a different thread``
+        (source: playwright/sync_api/_generated.py). So this override reproduces the
+        base method's contract -- same ``self.errors`` bookkeeping, same
+        ``_all_failed()`` behaviour, no row de-duplication (the base sync ``get_all``
+        does not de-dupe either; only ``async_get_all`` does) -- one league at a time.
+
+        Raises:
+            NaijaBetError: every league failed.
+        """
+        self.errors = {}
+        rows: List[Dict[str, Any]] = []
+        for league in Betid:
+            try:
+                rows += self.get_league(league)
+            except NaijaBetError as exc:
+                logger.warning("%s: %s failed: %s", self.site, league.name, exc)
+                self.errors[league] = exc
+        if len(self.errors) == len(Betid):
+            raise self._all_failed() from next(iter(self.errors.values()))
+        self.data = rows
+        return rows
+
+    # get_team (inherited) calls get_all above, so it also drives the browser serially.
 
     def async_get_league(
         self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession | None = None
