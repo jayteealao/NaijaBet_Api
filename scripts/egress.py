@@ -11,3 +11,9 @@ def egress() -> dict:
     response.raise_for_status()
     info = response.json()
     return {key: info.get(key) for key in ("ip", "city", "country", "org")}
+
+
+if __name__ == "__main__":
+    import json
+
+    print(json.dumps(egress()))

@@ -6,6 +6,7 @@ and a raw-socket "blackhole" that accepts a connection and never answers.
 """
 
 import json
+import os
 import socket
 import subprocess
 import sys
@@ -30,8 +31,13 @@ sys.path.insert(0, str(REPO / "scripts"))
 
 from egress import egress  # noqa: E402 - shared with scripts/record_session.py
 
+from tests.e2e.gate import expected_bookmakers  # noqa: E402
+
 # Per-bookmaker row counts stashed by the live suite; ``--live-record`` writes them out.
 COUNTS = pytest.StashKey[dict]()
+ASYNC_COUNTS = pytest.StashKey[dict]()
+# Outcomes of bookmakers outside ``LIVE_EXPECT``: rows, status, wall, blocked leagues.
+REPORTED = pytest.StashKey[dict]()
 
 
 # Configure pytest-asyncio
@@ -52,6 +58,12 @@ def pytest_sessionfinish(session, exitstatus):
         "ran-at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "egress": egress(),
         "bookmakers": dict(session.config.stash.get(COUNTS, {})),
+        "bookmakers-async": dict(session.config.stash.get(ASYNC_COUNTS, {})),
+        "expected": sorted(expected_bookmakers()),
+        "reported": dict(session.config.stash.get(REPORTED, {})),
+        "proxy-in-use": any(
+            os.environ.get(name) for name in ("HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy")
+        ),
         "git-sha": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
         "passed": int(exitstatus) == 0,
     }

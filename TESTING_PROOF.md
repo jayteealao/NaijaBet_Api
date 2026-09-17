@@ -71,7 +71,7 @@ One Bet9ja row recorded from a Lagos egress on 2026-09-16 (`time` is epoch secon
 ## Reproduce
 
 1. Connect Windscribe to Lagos.
-2. Run `make live`. Expected: `12 passed, 1 skipped` and a new `live-run.json`.
+2. Run `make live`. Expected: `15 passed, 1 skipped` and a new `live-run.json`.
 3. Run `uv run python scripts/check_live_run.py live-run.json`. Expected: `live-run.json accepted: ...` and exit 0.
 
 The `live` workflow also runs every Monday at 06:00 UTC; the latest runs are at [actions/workflows/live.yml](https://github.com/jayteealao/NaijaBet_Api/actions/workflows/live.yml). Each release run calls the same workflow before it builds.

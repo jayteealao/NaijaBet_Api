@@ -1,0 +1,6 @@
+.venv
+.scratch
+.ai
+.git
+.env.live
+live-run*.json

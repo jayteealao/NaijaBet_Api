@@ -2,7 +2,8 @@
 
 Usage: ``python scripts/check_live_run.py live-run.json [expected-git-sha]`` or ``... -`` to
 read stdin. Exit 0 when the record is at most 7 days old, names all three bookmakers with row
-counts above zero, records a passing run, and carries the git sha; exit 1 with the first
+counts above zero, was not narrowed through ``LIVE_EXPECT`` (its ``expected`` list, when present,
+covers all three), records a passing run, and carries the git sha; exit 1 with the first
 failing reason. When ``expected-git-sha`` is given, the record's ``git-sha`` must also match it
 (a full match, or a prefix match when one of the two is a short sha of at least 7 characters);
 without it, only the presence of ``git-sha`` is checked.
@@ -51,6 +52,13 @@ def check(record: dict, now: datetime, expected_sha: str | None = None) -> str |
             return f"bookmakers lacks {name}"
         if not isinstance(count, int) or isinstance(count, bool) or count <= 0:
             return f"bookmakers.{name} is {count!r}; an integer above zero is required"
+    expected = record.get("expected")
+    if expected is not None:
+        if not isinstance(expected, list):
+            return "expected is not a list"
+        for name in BOOKMAKERS:
+            if name not in expected:
+                return f"expected lacks {name}; a narrowed local run cannot serve as the release override"
     if record.get("passed") is not True:
         return "passed is not true; the recorded run did not pass"
     git_sha = record.get("git-sha")

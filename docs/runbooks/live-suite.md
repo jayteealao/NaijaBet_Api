@@ -30,7 +30,7 @@ CAUTION: keep the config file as Windscribe wrote it. The job strips the `DNS =`
    gh secret set WINDSCRIBE_WG_CONF < Windscribe-Lagos.conf
    ```
 4. Delete the local config file, or keep it outside the repository.
-5. Run `gh workflow run live.yml --ref main` and `gh run watch`. The job must print `egress country=NG bet9ja=200` and pass 12 tests.
+5. Run `gh workflow run live.yml --ref main` and `gh run watch`. The job must print `egress country=NG bet9ja=200` and pass 15 tests.
 
 ## Run the live suite locally
 
@@ -39,20 +39,46 @@ CAUTION: keep the config file as Windscribe wrote it. The job strips the `DNS =`
    ```bash
    make live
    ```
-   Expected: `12 passed, 1 skipped` (the skipped test runs only when Playwright is absent) in under five minutes, and a new `live-run.json` in the repository root.
+   Expected: `15 passed, 1 skipped` (the skipped test runs only when Playwright is absent) in under five minutes, and a new `live-run.json` in the repository root.
 3. Check the record:
    ```bash
    uv run python scripts/check_live_run.py live-run.json
    ```
    Expected: `live-run.json accepted: ran-at <timestamp>, bet9ja=<n>, betking=<n>, nairabet=<n>` and exit 0.
 
-`live-run.json` holds `ran-at` (UTC), `egress` (ip, city, country, org from ipinfo), `bookmakers` (row count per bookmaker), `git-sha`, and `passed`. The file is gitignored.
+`live-run.json` holds `ran-at` (UTC), `egress` (ip, city, country, org from ipinfo), `bookmakers` and `bookmakers-async` (row count per bookmaker on each path), `expected` (the bookmakers the run had to prove), `reported` (outcomes of bookmakers outside that set), `proxy-in-use`, `git-sha`, and `passed`. The file is gitignored.
 
 To run one bookmaker:
 
 ```bash
 uv run pytest tests/e2e -m live_site -k bet9ja -v
 ```
+
+## Run the live suite locally without the VPN client
+
+Two lanes read a gitignored `.env.live` at the repository root; `.env.live.example` lists the two keys.
+
+1. Copy `.env.live.example` to `.env.live` and fill in the values. Keep the WireGuard config file outside the repository and write its path with forward slashes.
+2. Start Docker Desktop.
+3. Run the WireGuard lane:
+   ```bash
+   make live-wg
+   ```
+   The first run builds the image, which takes several minutes; later runs start in seconds. The output must show `egress country=NG bet9ja=200` and `15 passed` (the 12 tests above plus 3 async tests), and a new `live-run.json` in the repository root.
+4. To run any command from Lagos, pass it as `CMD`:
+   ```bash
+   make lagos CMD="uv run python scripts/egress.py"
+   ```
+   The container mounts the repository at `/work`; the tunnel is up before the command starts and down after it ends.
+5. Without Docker, run the proxy lane:
+   ```bash
+   make live-proxy
+   ```
+   The proxy lane proves Betking and Nairabet and writes `live-run-proxy.json`. Bet9ja is driven but not asserted: its status and wall appear under `reported` (Bet9ja denies the proxy's peers). `live-run-proxy.json` carries `expected: ["betking", "nairabet"]` and `check_live_run.py` rejects it, so a proxy run never serves as a release override.
+
+`LIVE_EXPECT` (a comma-separated list) is what narrows the expected set; `make live` unsets it, so the CI lane and the WireGuard lane always prove all three bookmakers.
+
+Never paste a value from `.env.live` into a chat, a log, a commit, or an issue. The record stores `proxy-in-use` as `true` or `false`, never the URL.
 
 ## Submit an override record
 
@@ -98,4 +124,4 @@ Rotate the key every 90 days. No workflow checks the age of the secret; the main
 
 The live suite proves the egress and the endpoints, not the odds values. A league that lists no fixtures raises nothing and is tolerated. A bookmaker fails when any league raised `BookmakerBlockedError`, when the ten leagues together returned zero rows, or when the first row lacks one of the eleven keys.
 
-_Last reviewed: 2026-09-16._
+_Last reviewed: 2026-09-17._
