@@ -196,18 +196,14 @@ class BetkingPlaywright(Betking):
         Raises:
             NaijaBetError: every league failed.
         """
-        self.errors = {}
-        rows: List[Dict[str, Any]] = []
+        pairs: List[tuple] = []
         for league in Betid:
             try:
-                rows += self.get_league(league)
+                result: Any = self.get_league(league)
             except NaijaBetError as exc:
-                logger.warning("%s: %s failed: %s", self.site, league.name, exc)
-                self.errors[league] = exc
-        if len(self.errors) == len(Betid):
-            raise self._all_failed() from next(iter(self.errors.values()))
-        self.data = rows
-        return rows
+                result = exc
+            pairs.append((league, result))
+        return self._ledger(pairs)
 
     # get_team (inherited) calls get_all above, so it also drives the browser serially.
 

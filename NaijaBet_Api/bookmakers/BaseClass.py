@@ -5,6 +5,7 @@ import logging
 import time
 import warnings
 from abc import ABCMeta, abstractmethod
+from collections.abc import Iterable
 from typing import Any
 
 import aiohttp
@@ -248,6 +249,27 @@ class BookmakerBaseClass(metaclass=ABCMeta):
     def _all_failed(self) -> NaijaBetError:
         return NaijaBetError(self.site, f"all {len(Betid)} leagues failed; see .errors")
 
+    def _ledger(self, results: Iterable[tuple[Betid, "list[dict] | NaijaBetError"]]) -> list[dict]:
+        """Apply the one error-ledger rule shared by every ``get_all`` variant.
+
+        Resets ``self.errors``, walks the ``(league, result)`` pairs, records each
+        ``NaijaBetError`` into ``self.errors[league]`` with a warning, appends the
+        rows otherwise, raises :meth:`_all_failed` chained from the first error
+        when every league failed, sets ``self.data``, and returns the rows.
+        """
+        self.errors = {}
+        rows: list[dict] = []
+        for league, result in results:
+            if isinstance(result, NaijaBetError):
+                logger.warning("%s: %s failed: %s", self.site, league.name, result.message)
+                self.errors[league] = result
+            else:
+                rows += result
+        if len(self.errors) == len(Betid):
+            raise self._all_failed() from next(iter(self.errors.values()))
+        self.data = rows
+        return rows
+
     # ------------------------------------------------------------------ public API
 
     @abstractmethod
@@ -286,21 +308,16 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         Raises:
             NaijaBetError: every league failed.
         """
-        self.errors = {}
         self._warm_sync()
         with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(Betid), 10)) as executor:
             futures = [executor.submit(self.get_league, league) for league in Betid]
-            rows: list[dict] = []
+            pairs: list[tuple[Betid, list[dict] | NaijaBetError]] = []
             for league, future in zip(Betid, futures):
                 try:
-                    rows += future.result()
+                    pairs.append((league, future.result()))
                 except NaijaBetError as exc:
-                    logger.warning("%s: %s failed: %s", self.site, league.name, exc)
-                    self.errors[league] = exc
-        if len(self.errors) == len(Betid):
-            raise self._all_failed() from next(iter(self.errors.values()))
-        self.data = rows
-        return rows
+                    pairs.append((league, exc))
+        return self._ledger(pairs)
 
     async def async_get_league(
         self, league: Betid = Betid.PREMIERLEAGUE, async_session: aiohttp.ClientSession | None = None
@@ -318,19 +335,13 @@ class BookmakerBaseClass(metaclass=ABCMeta):
 
     async def async_get_all(self) -> list[dict]:
         """Async form of :meth:`get_all`; the ten leagues run concurrently on one session."""
-        self.errors = {}
         results = await asyncio.gather(*[self.async_get_league(league) for league in Betid], return_exceptions=True)
-        rows: list[dict] = []
+        pairs: list[tuple[Betid, list[dict] | NaijaBetError]] = []
         for league, result in zip(Betid, results):
-            if isinstance(result, NaijaBetError):
-                logger.warning("%s: %s failed: %s", self.site, league.name, result)
-                self.errors[league] = result
-            elif isinstance(result, BaseException):
+            if isinstance(result, BaseException) and not isinstance(result, NaijaBetError):
                 raise result
-            else:
-                rows += result
-        if len(self.errors) == len(Betid):
-            raise self._all_failed() from next(iter(self.errors.values()))
+            pairs.append((league, result))
+        rows = self._ledger(pairs)
         seen: set[tuple] = set()
         unique: list[dict] = []
         for row in rows:
