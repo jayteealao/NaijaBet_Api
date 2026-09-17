@@ -51,7 +51,7 @@ Raised when the bookmaker answered 200 but the body is not the JSON shape the no
 | `wall` | Meaning | Detection |
 |---|---|---|
 | `challenge` | A Cloudflare challenge page answered instead of the API. | The body contains `Just a moment` or `cf-mitigated`. |
-| `denied` | An Akamai access-denied page answered instead of the API. The usual cause is an egress outside Nigeria. | The body contains `Access Denied` and `Reference #`. |
+| `denied` | An Akamai access-denied page answered instead of the API. The usual cause is an egress outside Nigeria. | The body, after HTML entities are decoded, contains `Access Denied` and `Reference #`. |
 | `http` | Any other non-200 status. | Neither pattern matched. |
 
 ## Retry rule

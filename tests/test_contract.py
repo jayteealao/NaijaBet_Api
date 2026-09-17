@@ -17,6 +17,7 @@ from NaijaBet_Api import (
     NaijaBetError,
     ResponseParseError,
 )
+from NaijaBet_Api.exceptions import classify_wall
 from NaijaBet_Api.id import Betid
 
 ROW_KEYS = {
@@ -32,8 +33,20 @@ ROW_KEYS = {
     "home_or_away",
     "draw_or_away",
 }
+# The Akamai page as sports.bet9ja.com served it on 2026-09-17; the entities are the real encoding.
 DENIED_BODY = (
-    "<html><body>Access Denied\nYou don't have permission to access this page.\nReference #18.6f1</body></html>"
+    "<HTML><HEAD>\n"
+    "<TITLE>Access Denied</TITLE>\n"
+    "</HEAD><BODY>\n"
+    "<H1>Access Denied</H1>\n"
+    " \n"
+    "You don't have permission to access "
+    '"http&#58;&#47;&#47;sports&#46;bet9ja&#46;com&#47;desktop&#47;feapi&#47;PalimpsestAjax&#47;GetSports&#63;"'
+    " on this server.<P>\n"
+    "Reference&#32;&#35;18&#46;b8fd317&#46;1789664171&#46;1360c987\n"
+    "<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;b8fd317&#46;1789664171&#46;1360c987</P>\n"
+    "</BODY>\n"
+    "</HTML>\n"
 )
 CHALLENGE_BODY = "<html><head><title>Just a moment...</title></head><body>cf-mitigated</body></html>"
 
@@ -423,3 +436,9 @@ async def test_warm_up_failure_does_not_block_fetch(stub, league_routes, closed_
         assert len(await bookmaker.async_get_league()) == 3
     finally:
         await bookmaker.aclose()
+
+
+def test_classify_wall_decodes_entities():
+    assert classify_wall(403, DENIED_BODY) == "denied"
+    assert classify_wall(403, CHALLENGE_BODY) == "challenge"
+    assert classify_wall(502, "bad gateway") == "http"

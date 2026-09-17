@@ -6,6 +6,8 @@ list means the bookmaker answered with zero fixtures; it never means a failure.
 
 from __future__ import annotations
 
+import html
+
 WALL_CHALLENGE = "challenge"
 WALL_DENIED = "denied"
 WALL_HTTP = "http"
@@ -67,9 +69,14 @@ class ResponseParseError(NaijaBetError):
 
 
 def classify_wall(status: int, body: str) -> str:
-    """Name the wall behind a non-200 answer from its status and body."""
-    if "Just a moment" in body or "cf-mitigated" in body:
+    """Name the wall behind a non-200 answer from its status and body.
+
+    Akamai writes its page with HTML entities (``Reference&#32;&#35;18…``), so the
+    body is decoded before the substring tests.
+    """
+    text = html.unescape(body)
+    if "Just a moment" in text or "cf-mitigated" in text:
         return WALL_CHALLENGE
-    if "Access Denied" in body and "Reference #" in body:
+    if "Access Denied" in text and "Reference #" in text:
         return WALL_DENIED
     return WALL_HTTP
