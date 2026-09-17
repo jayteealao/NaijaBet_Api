@@ -57,7 +57,7 @@ live-proxy: ## Run the live suite through BRIGHTDATA_PROXY_URL in .env.live (Bet
 	BRIGHTDATA_PROXY_URL="$${BRIGHTDATA_PROXY_URL%$$'\r'}"; \
 	test -n "$$BRIGHTDATA_PROXY_URL" || { echo "BRIGHTDATA_PROXY_URL is not set in $(ENV_FILE)"; exit 2; }; \
 	HTTPS_PROXY="$$BRIGHTDATA_PROXY_URL" HTTP_PROXY="$$BRIGHTDATA_PROXY_URL" LIVE_EXPECT=betking,nairabet \
-	  uv run pytest $(LIVE_ARGS) --live-record live-run-proxy.json
+	  uv run pytest $(LIVE_ARGS) --ignore=tests/test_betking_playwright.py --live-record live-run-proxy.json
 
 build: ## Build the wheel and sdist and check them
 	rm -rf dist/

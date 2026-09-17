@@ -74,7 +74,7 @@ Two lanes read a gitignored `.env.live` at the repository root; `.env.live.examp
    ```bash
    make live-proxy
    ```
-   The proxy lane proves Betking and Nairabet and writes `live-run-proxy.json`. Bet9ja is driven but not asserted: its status and wall appear under `reported` (Bet9ja denies the proxy's peers). `live-run-proxy.json` carries `expected: ["betking", "nairabet"]` and `check_live_run.py` rejects it, so a proxy run never serves as a release override.
+   The proxy lane proves Betking and Nairabet and writes `live-run-proxy.json`. Bet9ja is driven but not asserted: its status and wall appear under `reported` (Bet9ja denies the proxy's peers). `live-run-proxy.json` carries `expected: ["betking", "nairabet"]` and `check_live_run.py` rejects it, so a proxy run never serves as a release override. The proxy lane skips the browser tests in `tests/test_betking_playwright.py` because Chromium does not read `HTTPS_PROXY`; the WireGuard lane (`make live-wg`) covers them.
 
 `LIVE_EXPECT` (a comma-separated list) is what narrows the expected set; `make live` unsets it, so the CI lane and the WireGuard lane always prove all three bookmakers.
 
