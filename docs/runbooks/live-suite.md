@@ -39,7 +39,7 @@ CAUTION: keep the config file as Windscribe wrote it. The job strips the `DNS =`
    ```bash
    make live
    ```
-   Expected: `15 passed, 1 skipped` (the skipped test runs only when Playwright is absent) in under five minutes, and a new `live-run.json` in the repository root.
+   Expected: `15 passed` in under five minutes, and a new `live-run.json` in the repository root.
 3. Check the record:
    ```bash
    uv run python scripts/check_live_run.py live-run.json
@@ -90,7 +90,8 @@ Conditions the workflow enforces (`scripts/check_live_run.py`):
 - `bookmakers` has an integer above zero for `bet9ja`, `betking`, and `nairabet`;
 - `passed` is `true`;
 - `git-sha` is present;
-- `git-sha` equals the commit of the released tag.
+- `git-sha` equals the commit of the released tag;
+- when the record carries an `expected` list, it names all three bookmakers; a record from `make live-proxy` is therefore rejected.
 
 1. Run `make live` from Lagos and check the record (previous section).
 2. Confirm the tag exists on `origin`: `git ls-remote --tags origin vX.Y.Z` prints one line.
