@@ -11,10 +11,12 @@ Installation:
 
 import pytest
 
-pytestmark = pytest.mark.live_site
-
 try:
+    from playwright.sync_api import Error as PlaywrightError
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+
     from NaijaBet_Api.bookmakers.betking_playwright import BetkingPlaywright
+    from NaijaBet_Api.exceptions import BookmakerTimeoutError, BookmakerUnreachableError
     from NaijaBet_Api.id import Betid
 
     PLAYWRIGHT_AVAILABLE = True
@@ -25,6 +27,8 @@ except ImportError:
 @pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
 class TestBetkingPlaywright:
     """Tests for Betking with Playwright browser automation"""
+
+    pytestmark = pytest.mark.live_site
 
     @pytest.mark.timeout(60)
     def test_initialization(self):
@@ -137,6 +141,49 @@ class TestBetkingPlaywright:
         """Test custom timeout setting"""
         betking = BetkingPlaywright(headless=True, timeout=60000)
         assert betking.timeout == 60000
+
+
+@pytest.mark.skipif(not PLAYWRIGHT_AVAILABLE, reason="Playwright not installed")
+class TestBetkingPlaywrightRequestErrors:
+    """get_league must wrap page.request.get() failures as NaijaBetError, offline (no real browser)."""
+
+    class _StubRequest:
+        def __init__(self, exc: Exception) -> None:
+            self._exc = exc
+            self.last_timeout = None
+
+        def get(self, url: str, timeout=None):
+            self.last_timeout = timeout
+            raise self._exc
+
+    class _StubPage:
+        def __init__(self, exc: Exception) -> None:
+            self.request = TestBetkingPlaywrightRequestErrors._StubRequest(exc)
+
+    @staticmethod
+    def _stubbed_betking(exc: Exception, timeout: int = 30000) -> BetkingPlaywright:
+        betking = BetkingPlaywright(headless=True, timeout=timeout)
+        # Pretend the browser is already running so get_league() doesn't try to launch one.
+        betking.browser = object()
+        betking.page = TestBetkingPlaywrightRequestErrors._StubPage(exc)
+        return betking
+
+    def test_get_league_wraps_playwright_timeout_error(self):
+        betking = self._stubbed_betking(PlaywrightTimeoutError("x"))
+        with pytest.raises(BookmakerTimeoutError):
+            betking.get_league(Betid.PREMIERLEAGUE)
+
+    def test_get_league_wraps_playwright_error(self):
+        betking = self._stubbed_betking(PlaywrightError("boom"))
+        with pytest.raises(BookmakerUnreachableError):
+            betking.get_league(Betid.PREMIERLEAGUE)
+
+    def test_get_league_forwards_timeout_to_request_get(self):
+        betking = self._stubbed_betking(PlaywrightTimeoutError("x"), timeout=5000)
+        with pytest.raises(BookmakerTimeoutError):
+            betking.get_league(Betid.PREMIERLEAGUE)
+        assert betking.page.request.last_timeout == 5000
+        assert betking.request_timeout == (5.0, 5.0)
 
 
 @pytest.mark.skipif(PLAYWRIGHT_AVAILABLE, reason="Only run when Playwright not available")

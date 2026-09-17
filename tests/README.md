@@ -27,7 +27,7 @@ Fixtures live in `conftest.py`: `stub` (a concrete bookmaker pointed at the stub
 Offline suite, the same command CI runs:
 
 ```bash
-uv run pytest tests/ -q --timeout=120 -o log_cli=0
+uv run pytest tests/ -q --timeout=120 -o log_cli=0 --cov=NaijaBet_Api
 ```
 
 `make test` runs the same command. The `live_site` marker is deselected by default through `addopts` in `pyproject.toml`, so this command collects no live test.

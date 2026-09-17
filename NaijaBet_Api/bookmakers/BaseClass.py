@@ -1,4 +1,5 @@
 import asyncio
+import concurrent.futures
 import json
 import logging
 import time
@@ -70,6 +71,7 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         self._session: requests.Session | None = None
         self._async_session: aiohttp.ClientSession | None = None
         self._warmed = {"sync": False, "async": False}
+        self._warm_lock = asyncio.Lock()
         self.errors: dict[Betid, NaijaBetError] = {}
         self.data: list[dict] = []
 
@@ -90,7 +92,9 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         """The blocking session, created on first access."""
         if self._session is None:
             session = requests.Session()
-            adapter = _DefaultTimeoutAdapter(self._timeout)
+            # get_all() fans the leagues out across a thread pool sized to len(Betid); the pool
+            # must hold at least that many connections or workers queue up waiting for one.
+            adapter = _DefaultTimeoutAdapter(self._timeout, pool_maxsize=max(len(Betid), 10))
             session.mount("https://", adapter)
             session.mount("http://", adapter)
             session.headers.update(self._headers)
@@ -134,14 +138,15 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         self._warmed["sync"] = True
 
     async def _warm_async(self, session: aiohttp.ClientSession) -> None:
-        if self._warmed["async"]:
-            return
-        try:
-            async with session.get(self._url):
-                pass
-        except (aiohttp.ClientError, asyncio.TimeoutError, TimeoutError) as exc:
-            logger.debug("%s: warm-up request failed: %s", self.site, exc)
-        self._warmed["async"] = True
+        async with self._warm_lock:
+            if self._warmed["async"]:
+                return
+            try:
+                async with session.get(self._url):
+                    pass
+            except (aiohttp.ClientError, asyncio.TimeoutError, TimeoutError) as exc:
+                logger.debug("%s: warm-up request failed: %s", self.site, exc)
+            self._warmed["async"] = True
 
     def _blocked(self, status: int, body: str) -> BookmakerBlockedError:
         return BookmakerBlockedError(self.site, status, classify_wall(status, body), body[:BODY_EXCERPT_CHARS])
@@ -150,15 +155,32 @@ class BookmakerBaseClass(metaclass=ABCMeta):
     def _retryable(status: int, wall: str) -> bool:
         return status in _RETRYABLE_STATUS and wall == WALL_HTTP
 
+    def _decide_status(self, status: int, body: str, attempt: int) -> BookmakerBlockedError | None:
+        """Decide what to do with a non-200 response.
+
+        Returns ``None`` when the caller should retry once, or the
+        :class:`BookmakerBlockedError` to raise otherwise.
+        """
+        wall = classify_wall(status, body)
+        if attempt == 0 and self._retryable(status, wall):
+            return None
+        return self._blocked(status, body)
+
     def _fetch_sync(self, url: str) -> str:
         for attempt in (0, 1):
             try:
                 res = self.session.get(url)
+            except requests.exceptions.ConnectTimeout as exc:
+                if attempt == 0:
+                    logger.warning("%s: connect timeout, retrying once: %s", self.site, exc)
+                    time.sleep(_RETRY_DELAY_S)
+                    continue
+                raise BookmakerUnreachableError(self.site, str(exc)) from exc
             except requests.Timeout as exc:
                 raise BookmakerTimeoutError(self.site, f"timed out after {self._timeout} s") from exc
             except requests.ConnectionError as exc:
                 if attempt == 0:
-                    logger.debug("%s: connection error, retrying once: %s", self.site, exc)
+                    logger.warning("%s: connection error, retrying once: %s", self.site, exc)
                     time.sleep(_RETRY_DELAY_S)
                     continue
                 raise BookmakerUnreachableError(self.site, str(exc)) from exc
@@ -166,16 +188,16 @@ class BookmakerBaseClass(metaclass=ABCMeta):
                 raise BookmakerUnreachableError(self.site, str(exc)) from exc
             if res.status_code == 200:
                 return res.text
-            wall = classify_wall(res.status_code, res.text)
-            if attempt == 0 and self._retryable(res.status_code, wall):
-                logger.debug("%s: HTTP %s, retrying once", self.site, res.status_code)
+            error = self._decide_status(res.status_code, res.text, attempt)
+            if error is None:
+                logger.warning("%s: HTTP %s, retrying once", self.site, res.status_code)
                 time.sleep(_RETRY_DELAY_S)
                 continue
             try:
                 res.raise_for_status()
             except requests.HTTPError as exc:
-                raise self._blocked(res.status_code, res.text) from exc
-            raise self._blocked(res.status_code, res.text)
+                raise error from exc
+            raise error
         raise AssertionError("unreachable")  # pragma: no cover
 
     async def _fetch_async(self, url: str, session: aiohttp.ClientSession) -> str:
@@ -190,7 +212,7 @@ class BookmakerBaseClass(metaclass=ABCMeta):
                 raise ResponseParseError(self.site, f"response body could not be decoded: {exc}") from exc
             except aiohttp.ClientConnectionError as exc:
                 if attempt == 0:
-                    logger.debug("%s: connection error, retrying once: %s", self.site, exc)
+                    logger.warning("%s: connection error, retrying once: %s", self.site, exc)
                     await asyncio.sleep(_RETRY_DELAY_S)
                     continue
                 raise BookmakerUnreachableError(self.site, str(exc)) from exc
@@ -202,12 +224,12 @@ class BookmakerBaseClass(metaclass=ABCMeta):
                 raise
             if status == 200:
                 return body
-            wall = classify_wall(status, body)
-            if attempt == 0 and self._retryable(status, wall):
-                logger.debug("%s: HTTP %s, retrying once", self.site, status)
+            error = self._decide_status(status, body, attempt)
+            if error is None:
+                logger.warning("%s: HTTP %s, retrying once", self.site, status)
                 await asyncio.sleep(_RETRY_DELAY_S)
                 continue
-            raise self._blocked(status, body)
+            raise error
         raise AssertionError("unreachable")  # pragma: no cover
 
     def _parse(self, text: str) -> list[dict]:
@@ -257,17 +279,24 @@ class BookmakerBaseClass(metaclass=ABCMeta):
     def get_all(self) -> list[dict]:
         """Return the rows of every league; failures land in ``self.errors``.
 
+        The ten leagues are fetched concurrently on the shared ``requests.Session``, whose
+        pooled ``HTTPAdapter`` is sized to hold that many connections at once, so a league's
+        retry sleep no longer blocks the next league's request.
+
         Raises:
             NaijaBetError: every league failed.
         """
         self.errors = {}
-        rows: list[dict] = []
-        for league in Betid:
-            try:
-                rows += self.get_league(league)
-            except NaijaBetError as exc:
-                logger.warning("%s: %s failed: %s", self.site, league.name, exc)
-                self.errors[league] = exc
+        self._warm_sync()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(len(Betid), 10)) as executor:
+            futures = [executor.submit(self.get_league, league) for league in Betid]
+            rows: list[dict] = []
+            for league, future in zip(Betid, futures):
+                try:
+                    rows += future.result()
+                except NaijaBetError as exc:
+                    logger.warning("%s: %s failed: %s", self.site, league.name, exc)
+                    self.errors[league] = exc
         if len(self.errors) == len(Betid):
             raise self._all_failed() from next(iter(self.errors.values()))
         self.data = rows
@@ -284,7 +313,8 @@ class BookmakerBaseClass(metaclass=ABCMeta):
         session = self.async_session if async_session is None else async_session
         if own:
             await self._warm_async(session)
-        return self._parse(await self._fetch_async(league.to_endpoint(self.site), session))
+        body = await self._fetch_async(league.to_endpoint(self.site), session)
+        return await asyncio.to_thread(self._parse, body)
 
     async def async_get_all(self) -> list[dict]:
         """Async form of :meth:`get_all`; the ten leagues run concurrently on one session."""

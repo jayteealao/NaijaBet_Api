@@ -18,7 +18,7 @@ Base: `NaijaBetError`.
 
 Fields: `bookmaker`, `status` (the HTTP status code), `wall` (see the table below), `body_excerpt` (the first 200 characters of the response body).
 
-Raised when the bookmaker answered with a status other than 200. A 5xx status with wall `http` is retried once after 1.0 s; a second non-200 answer raises. A 403 or 404 raises at once. `BetkingPlaywright` raises the same class when the browser request answers a status other than 200.
+Raised when the bookmaker answered with a status other than 200. A 5xx status with wall `http` is retried once after 1.0 s; a second non-200 answer raises. A 403 or 404 raises at once. `BetkingPlaywright` raises on the first non-200 answer from the browser request; it does not retry.
 
 ## BookmakerUnreachableError
 
@@ -61,7 +61,7 @@ The library retries at most once, after a delay of 1.0 s, and only for two condi
 - a transport error on the blocking or the async transport (`requests.ConnectionError`, `aiohttp.ClientConnectionError`);
 - a 5xx status whose wall is `http`.
 
-A timeout, a 4xx status, a `challenge` or `denied` wall, and a parse failure are not retried. A caller that wants more attempts wraps the call, as the example below does for a timeout.
+A timeout, a 4xx status, a `challenge` or `denied` wall, and a parse failure are not retried. A caller that wants more attempts wraps the call, as the example below does for a timeout. `BetkingPlaywright` does not retry: its single browser request raises on the first non-200 answer.
 
 ## Caller example
 
