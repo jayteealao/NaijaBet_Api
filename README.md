@@ -125,7 +125,7 @@ with BetkingPlaywright() as betking:
     rows = betking.get_league(Betid.PREMIERLEAGUE)
 ```
 
-`BetkingPlaywright` is synchronous only: `async_get_league`, `async_get_all`, and `async_session` raise `NotImplementedError`. A non-200 answer raises `BookmakerBlockedError` and a bad body raises `ResponseParseError`, as for the other bookmakers; a browser transport failure or a Playwright timeout raises Playwright's own error, which `get_all` does not record in `errors`. See [BETKING_BROWSER_AUTOMATION.md](BETKING_BROWSER_AUTOMATION.md) and [examples/betking_playwright_example.py](examples/betking_playwright_example.py).
+`BetkingPlaywright` is synchronous only: `async_get_league`, `async_get_all`, and `async_session` raise `NotImplementedError`. A non-200 answer raises `BookmakerBlockedError` and a bad body raises `ResponseParseError`, as for the other bookmakers; a league request that times out raises `BookmakerTimeoutError` and a league request that fails to reach the bookmaker raises `BookmakerUnreachableError`, both recorded by `get_all`. Only the browser start can raise a raw Playwright error. See [BETKING_BROWSER_AUTOMATION.md](BETKING_BROWSER_AUTOMATION.md) and [examples/betking_playwright_example.py](examples/betking_playwright_example.py).
 
 ## Live gate
 

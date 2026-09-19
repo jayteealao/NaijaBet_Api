@@ -32,7 +32,7 @@ with BetkingPlaywright() as betking:
 - One browser serves every call on the instance; `get_all` fetches the ten leagues through the same page.
 - The rows have the same eleven keys as the other bookmakers; `time` is epoch seconds.
 
-A non-200 answer raises `BookmakerBlockedError`, and a bad body raises `ResponseParseError`, the same classes as the other bookmakers. A browser transport failure or a Playwright timeout raises Playwright's own error; that error is not a `NaijaBetError`, so `get_all` does not record it in `errors` and stops at that league. A non-200 answer on the browser's first visit to `betking.com/sports` is only logged as a warning. `get_all` records `NaijaBetError` failures per league in `betking.errors` and raises `NaijaBetError` only when every league failed. See [docs/reference/exceptions.md](docs/reference/exceptions.md).
+A non-200 answer raises `BookmakerBlockedError`, and a bad body raises `ResponseParseError`, the same classes as the other bookmakers. A league request that times out raises `BookmakerTimeoutError`, and a league request that fails to reach the bookmaker raises `BookmakerUnreachableError`; `get_all` records each as a `NaijaBetError` in `errors` and continues with the next league. Only the browser start can raise a raw Playwright error, and a failed browser start stops the Playwright instance before re-raising it. A non-200 answer on the browser's first visit to `betking.com/sports` is only logged as a warning. `get_all` records `NaijaBetError` failures per league in `betking.errors` and raises `NaijaBetError` only when every league failed. See [docs/reference/exceptions.md](docs/reference/exceptions.md).
 
 ```python
 from NaijaBet_Api import BookmakerBlockedError
