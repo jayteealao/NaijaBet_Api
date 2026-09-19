@@ -133,7 +133,7 @@ Every release runs the live suite against the three bookmakers from a Lagos egre
 
 ## Changes since 0.3
 
-Version 0.4.0, the release after 0.3.1, removes `sportybet_payload`, the `nairabetDNB` key, and the `python -m NaijaBet_Api` entry point; `session_type` is still accepted by the constructor and ignored (a `DeprecationWarning` is emitted). A failed fetch raises a typed exception; the empty-list signal of 0.3 is gone. The changelog carries the detail per version.
+Version 0.4.0, the release after 0.3.1, removes `sportybet_payload`, the `nairabetDNB` key, the `python -m NaijaBet_Api` entry point, `NaijaBet_Api.utils.logger`, and the empty `NaijaBet_Api.schema` package; `session_type` is still accepted by the constructor and ignored (a `DeprecationWarning` is emitted). A failed fetch raises a typed exception; the empty-list signal of 0.3 is gone. The changelog carries the detail per version.
 
 ## TODO
 

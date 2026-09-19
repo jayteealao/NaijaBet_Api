@@ -67,11 +67,29 @@ jobs:
           [ "$COUNTRY" = NG ] && [ "$CODE" = 200 ]
       - name: Live suite
         run: make live
+      # live-run.json embeds the tunnel's exit IP (egress.ip); the repo is public, so run
+      # artifacts are downloadable by any authenticated GitHub user. Upload a redacted copy
+      # instead and leave the original untouched for the local release-override check.
+      - name: Redact the egress IP for upload
+        if: always()
+        run: |
+          uv run python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("live-run.json")
+          if path.exists():
+              record = json.loads(path.read_text(encoding="utf-8"))
+              egress = record.get("egress")
+              if isinstance(egress, dict) and "ip" in egress:
+                  egress["ip"] = "redacted"
+              Path("live-run.redacted.json").write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+          PY
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: live-run
-          path: live-run.json
+          path: live-run.redacted.json
           if-no-files-found: ignore
       - name: Tear down the tunnel
         if: always()

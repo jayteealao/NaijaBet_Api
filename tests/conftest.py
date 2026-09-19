@@ -50,16 +50,28 @@ def pytest_addoption(parser):
 
 
 def pytest_sessionfinish(session, exitstatus):
-    """Write the dated record the release override reads: ``make live`` passes ``--live-record``."""
+    """Write the dated record the release override reads: ``make live`` passes ``--live-record``.
+
+    ``expected_bookmakers()`` raises ``ValueError`` on a mistyped ``LIVE_EXPECT``; resolve it up
+    front so that failure lands in the record instead of aborting the hook with no record written.
+    ``scripts/check_live_run.py`` treats a present-but-narrow ``expected`` list as a rejection, so
+    an empty list here (paired with the ``expected-error`` detail) is rejected the same clean way.
+    """
     path = session.config.getoption("--live-record")
     if path is None:
         return
+    try:
+        expected = sorted(expected_bookmakers())
+        expected_error = None
+    except ValueError as exc:
+        expected = []
+        expected_error = str(exc)
     record = {
         "ran-at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "egress": egress(),
         "bookmakers": dict(session.config.stash.get(COUNTS, {})),
         "bookmakers-async": dict(session.config.stash.get(ASYNC_COUNTS, {})),
-        "expected": sorted(expected_bookmakers()),
+        "expected": expected,
         "reported": dict(session.config.stash.get(REPORTED, {})),
         "proxy-in-use": any(
             os.environ.get(name) for name in ("HTTPS_PROXY", "HTTP_PROXY", "https_proxy", "http_proxy")
@@ -67,6 +79,8 @@ def pytest_sessionfinish(session, exitstatus):
         "git-sha": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
         "passed": int(exitstatus) == 0,
     }
+    if expected_error is not None:
+        record["expected-error"] = expected_error
     Path(path).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
 
 

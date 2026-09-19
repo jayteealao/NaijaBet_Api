@@ -46,7 +46,7 @@ CAUTION: keep the config file as Windscribe wrote it. The job strips the `DNS =`
    ```
    Expected: `live-run.json accepted: ran-at <timestamp>, bet9ja=<n>, betking=<n>, nairabet=<n>` and exit 0.
 
-`live-run.json` holds `ran-at` (UTC), `egress` (ip, city, country, org from ipinfo), `bookmakers` and `bookmakers-async` (row count per bookmaker on each path), `expected` (the bookmakers the run had to prove), `reported` (outcomes of bookmakers outside that set), `proxy-in-use`, `git-sha`, and `passed`. The file is gitignored.
+`live-run.json` holds `ran-at` (UTC), `egress` (ip, city, country, org from ipinfo), `bookmakers` and `bookmakers-async` (row count per bookmaker on each path), `expected` (the bookmakers the run had to prove), `reported` (outcomes of bookmakers outside that set), `proxy-in-use`, `git-sha`, and `passed`. The file is gitignored; the copy the workflow uploads as the `live-run` artifact carries `egress.ip: redacted`.
 
 To run one bookmaker:
 

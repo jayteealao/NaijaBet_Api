@@ -2,8 +2,9 @@
 
 The script drives Chromium through each bookmaker's front door and then through the exact
 Premier League URL the library builds, records a HAR limited to the bookmaker hosts, replaces
-every cookie value with ``REDACTED``, writes the decoded Premier League bodies, and prints one
-table row per recorded request. The maintainer copies the printed facts into
+every cookie value and secret-bearing header or query value with ``REDACTED``, writes the
+decoded Premier League bodies, and prints one table row per recorded request (with every query
+parameter value masked). The maintainer copies the printed facts into
 ``tests/fixtures/endpoint-provenance.json``; the HAR itself is never committed.
 
 Run it from a Nigerian egress (the bookmakers reject other regions):
@@ -21,7 +22,7 @@ import socket
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from egress import egress
 
@@ -31,7 +32,19 @@ from NaijaBet_Api.id import Betid
 HOST_FILTER = re.compile(r"https://[^/]*(bet9ja\.com|betking\.com|nairabet\.com|biahosted\.com)/")
 SITES = {"bet9ja": Bet9ja, "betking": Betking, "nairabet": Nairabet}
 COOKIE_HEADERS = {"cookie", "set-cookie"}
+AUTH_HEADER_NAMES = {"authorization", "proxy-authorization"}
+SECRET_NAME_RE = re.compile(r"token|secret|key|x-auth", re.IGNORECASE)
 NAV_TIMEOUT_MS = 60_000
+
+
+def is_secret_name(name: str) -> bool:
+    """True when a header or query-parameter name is known to carry a secret value.
+
+    Matches ``authorization``/``proxy-authorization`` exactly, and any other name containing
+    ``token``, ``secret``, ``key`` (which also covers ``api-key``/``apikey``), or ``x-auth``.
+    """
+    lowered = name.lower()
+    return lowered in AUTH_HEADER_NAMES or SECRET_NAME_RE.search(lowered) is not None
 
 
 def headers_of(cls) -> tuple[str | None, dict[str, str]]:
@@ -93,19 +106,52 @@ def record(out: Path, headed: bool) -> Path:
     return har
 
 
+def redact_query(request: dict) -> int:
+    """Replace secret-looking query parameter values in a request's URL and ``queryString``.
+
+    A parameter is redacted when its name matches ``is_secret_name`` (for example a ``key`` or
+    ``token`` parameter); other parameters, like ``league``, are left as recorded.
+    """
+    url = request.get("url", "")
+    parts = urlsplit(url)
+    if not parts.query:
+        return 0
+    count = 0
+    redacted_pairs = []
+    for name, value in parse_qsl(parts.query, keep_blank_values=True):
+        if is_secret_name(name) and value != "REDACTED":
+            value = "REDACTED"
+            count += 1
+        redacted_pairs.append((name, value))
+    if count:
+        request["url"] = urlunsplit((parts.scheme, parts.netloc, parts.path, urlencode(redacted_pairs), parts.fragment))
+        if "queryString" in request:
+            request["queryString"] = [{"name": name, "value": value} for name, value in redacted_pairs]
+    return count
+
+
 def redact(har: Path) -> int:
-    """Replace every cookie value in the HAR with REDACTED; return the count."""
+    """Replace every cookie value and secret-bearing header or query value with REDACTED.
+
+    Headers are redacted when the (lower-cased) name is a cookie header or matches
+    ``is_secret_name`` (``authorization``, ``proxy-authorization``, or a name containing
+    ``token``, ``secret``, ``key``, or ``x-auth``). Query parameters in a request's URL are
+    redacted the same way; other query parameters are left untouched. Returns the count of
+    values replaced.
+    """
     data = json.loads(har.read_text(encoding="utf-8"))
     count = 0
     for entry in data["log"]["entries"]:
         for side in ("request", "response"):
             for header in entry[side].get("headers", []):
-                if header["name"].lower() in COOKIE_HEADERS:
+                name = header["name"].lower()
+                if name in COOKIE_HEADERS or is_secret_name(name):
                     header["value"] = "REDACTED"
                     count += 1
             for cookie in entry[side].get("cookies", []):
                 cookie["value"] = "REDACTED"
                 count += 1
+        count += redact_query(entry["request"])
     har.write_text(json.dumps(data, indent=1), encoding="utf-8")
     return count
 
@@ -137,11 +183,24 @@ def write_bodies(har: Path, out: Path) -> dict[str, int]:
     return statuses
 
 
+def masked_path(url: str) -> str:
+    """Return ``url``'s path and query with every query parameter value replaced by ``***``.
+
+    Parameter names are kept so the printed table stays readable; this masks every value,
+    not only secret-looking ones, since the table is meant to be pasted into a pull request.
+    """
+    parts = urlsplit(url)
+    if not parts.query:
+        return parts.path
+    masked = "&".join(f"{name}=***" for name, _ in parse_qsl(parts.query, keep_blank_values=True))
+    return f"{parts.path}?{masked}"
+
+
 def print_table(har: Path) -> None:
     print(f"{'host':45} {'path':70} {'status':>6} content-type")
     for entry in entries(har):
         parts = urlsplit(entry["request"]["url"])
-        path = parts.path + ("?" + parts.query if parts.query else "")
+        path = masked_path(entry["request"]["url"])
         content_type = entry["response"].get("content", {}).get("mimeType", "")
         print(f"{parts.hostname:45} {path[:70]:70} {entry['response']['status']:>6} {content_type}")
 
