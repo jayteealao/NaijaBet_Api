@@ -17,6 +17,7 @@ The class has no async path: ``async_get_league``, ``async_get_all``, and ``asyn
 raise ``NotImplementedError``. Failures raise the same exceptions as the other bookmakers.
 """
 
+import contextlib
 import logging
 from typing import Any, NoReturn
 
@@ -90,61 +91,77 @@ class BetkingPlaywright(Betking):
 
         self.playwright = sync_playwright().start()
 
-        # Launch browser with realistic settings
-        self.browser = self.playwright.chromium.launch(
-            headless=self.headless,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--disable-dev-shm-usage",
-                "--no-sandbox",
-            ],
-        )
+        try:
+            # Launch browser with realistic settings
+            self.browser = self.playwright.chromium.launch(
+                headless=self.headless,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-dev-shm-usage",
+                    "--no-sandbox",
+                ],
+            )
 
-        # Create context with realistic browser fingerprint
-        self.context = self.browser.new_context(
-            viewport={"width": 1920, "height": 1080},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/120.0.0.0 Safari/537.36",
-            locale="en-US",
-            timezone_id="America/New_York",
-        )
+            # Create context with realistic browser fingerprint
+            self.context = self.browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36",
+                locale="en-US",
+                timezone_id="America/New_York",
+            )
 
-        # Set extra headers
-        self.context.set_extra_http_headers(
-            {
-                "Accept": "application/json, text/plain, */*",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Referer": "https://betking.com/",
-            }
-        )
+            # Set extra headers
+            self.context.set_extra_http_headers(
+                {
+                    "Accept": "application/json, text/plain, */*",
+                    "Accept-Language": "en-US,en;q=0.9",
+                    "Accept-Encoding": "gzip, deflate, br",
+                    "Referer": "https://betking.com/",
+                }
+            )
 
-        # Create page
-        self.page = self.context.new_page()
-        self.page.set_default_timeout(self.timeout)
+            # Create page
+            self.page = self.context.new_page()
+            self.page.set_default_timeout(self.timeout)
 
-        # Visit main site to establish session and get past Cloudflare
-        logger.info("loading %s", self._sports_url)
-        response = self.page.goto(self._sports_url, wait_until="networkidle")
-        status = response.status if response is not None else None
-        if status == 200:
-            logger.info("Browser session established")
-        else:
-            logger.warning("%s answered %s on browser start", self.site, status)
+            # Visit main site to establish session and get past Cloudflare. Only wait for
+            # the DOM here: betking.com keeps background analytics/bot-detection connections
+            # open, so it never reaches network-idle and the wait used to time out.
+            logger.info("loading %s", self._sports_url)
+            response = self.page.goto(self._sports_url, wait_until="domcontentloaded")
+            # Best-effort settle: the cookies/Cloudflare clearance we need come from the
+            # navigation response itself, so a missed idle wait is not fatal.
+            try:
+                self.page.wait_for_load_state("networkidle", timeout=min(10000, self.timeout))
+            except PlaywrightTimeoutError:
+                logger.debug("%s did not reach network idle after load", self._sports_url)
+            status = response.status if response is not None else None
+            if status == 200:
+                logger.info("Browser session established")
+            else:
+                logger.warning("%s answered %s on browser start", self.site, status)
+        except Exception:
+            self._stop_browser()
+            raise
 
     def _stop_browser(self):
         """Stop Playwright browser and clean up"""
         if self.page:
-            self.page.close()
+            with contextlib.suppress(Exception):
+                self.page.close()
             self.page = None
         if self.context:
-            self.context.close()
+            with contextlib.suppress(Exception):
+                self.context.close()
             self.context = None
         if self.browser:
-            self.browser.close()
+            with contextlib.suppress(Exception):
+                self.browser.close()
             self.browser = None
         if self.playwright:
-            self.playwright.stop()
+            with contextlib.suppress(Exception):
+                self.playwright.stop()
             self.playwright = None
 
     def get_league(self, league: Betid = Betid.PREMIERLEAGUE) -> list[dict[str, Any]]:
