@@ -137,6 +137,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  docker-lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: shellcheck
+        run: shellcheck docker/lagos-entry.sh
+      # Warnings (DL3008: apt packages unpinned) are reported, not fatal, until the apt pins land; raise the threshold to warning then.
+      - name: hadolint
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387 # v3.5.0
+        with:
+          dockerfile: docker/lagos.Dockerfile
+          failure-threshold: error
+
   dry-run:
     needs: [format, lint, type-check, test]
     runs-on: ubuntu-latest
