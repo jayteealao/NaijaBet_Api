@@ -18,7 +18,7 @@ raise ``NotImplementedError``. Failures raise the same exceptions as the other b
 """
 
 import logging
-from typing import Any, Dict, List, NoReturn, Optional
+from typing import Any, NoReturn
 
 import aiohttp
 from playwright.sync_api import (
@@ -70,9 +70,9 @@ class BetkingPlaywright(Betking):
         self.headless = headless
         self.timeout = timeout
         self.playwright = None
-        self.browser: Optional[Browser] = None
-        self.context: Optional[BrowserContext] = None
-        self.page: Optional[Page] = None
+        self.browser: Browser | None = None
+        self.context: BrowserContext | None = None
+        self.page: Page | None = None
 
     def __enter__(self):
         """Context manager entry - starts browser"""
@@ -147,7 +147,7 @@ class BetkingPlaywright(Betking):
             self.playwright.stop()
             self.playwright = None
 
-    def get_league(self, league: Betid = Betid.PREMIERLEAGUE) -> List[Dict[str, Any]]:
+    def get_league(self, league: Betid = Betid.PREMIERLEAGUE) -> list[dict[str, Any]]:
         """
         Get league odds using browser automation.
 
@@ -181,7 +181,7 @@ class BetkingPlaywright(Betking):
             raise self._blocked(response.status, body)
         return self._parse(body)
 
-    def get_all(self) -> List[Dict[str, Any]]:
+    def get_all(self) -> list[dict[str, Any]]:
         """Return the rows of every league, fetched serially on the calling thread.
 
         The base class's ``get_all`` fans the leagues out across a
@@ -196,7 +196,7 @@ class BetkingPlaywright(Betking):
         Raises:
             NaijaBetError: every league failed.
         """
-        pairs: List[tuple] = []
+        pairs: list[tuple] = []
         for league in Betid:
             try:
                 result: Any = self.get_league(league)

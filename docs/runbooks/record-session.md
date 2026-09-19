@@ -42,7 +42,7 @@ Expected: every package host has a manifest entry, the Nairabet `api` host is no
 
 ## Redact and store the HAR
 
-The recorder replaces every cookie value and every `cookie` and `set-cookie` header value with `REDACTED` before it writes `session.har`. Before the HAR leaves the machine, check the other headers by hand: an `authorization` header or a token in a query string needs the same treatment.
+The recorder replaces every cookie value, every `cookie` and `set-cookie` header value, every `authorization` and `proxy-authorization` header value, any header whose name contains `token`, `secret`, `key` (which also covers `api-key`/`apikey`), or `x-auth`, and any query-string parameter whose name matches the same pattern, with `REDACTED` before it writes `session.har`. The printed table also masks every query parameter value (`***`) so it is safe to paste into a pull request. Before the HAR leaves the machine, check the other headers by hand: a secret carried under an unusual header name is not caught automatically.
 
 The HAR is never committed: `.gitignore` lists `*.har` and `.scratch/`, and `tests/test_endpoint_provenance.py` fails when a tracked `.har` file exists. Keep the HAR outside the repository, or delete it after the manifest is updated. The manifest carries the facts; the HAR is the working file.
 
