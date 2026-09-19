@@ -131,6 +131,15 @@ with BetkingPlaywright() as betking:
 
 Every release runs the live suite against the three bookmakers from a Lagos egress before it builds; a bookmaker that returns zero rows or a `BookmakerBlockedError` blocks the release. The latest recorded run and the endpoint hosts are in [TESTING_PROOF.md](TESTING_PROOF.md); the maintainer procedure is in [docs/runbooks/live-suite.md](docs/runbooks/live-suite.md).
 
+## Documentation
+
+- [docs/reference/exceptions.md](docs/reference/exceptions.md): each exception class, its fields, the wall values, and the retry rule.
+- [docs/runbooks/live-suite.md](docs/runbooks/live-suite.md): the tunnel secret, the local live suite from a Lagos egress, and the override record.
+- [docs/runbooks/record-session.md](docs/runbooks/record-session.md): the session recorder and the endpoint manifest review.
+- [BETKING_BROWSER_AUTOMATION.md](BETKING_BROWSER_AUTOMATION.md): the Playwright path for Betking from outside Nigeria.
+- [TESTING_PROOF.md](TESTING_PROOF.md): the latest recorded live run and the endpoint hosts.
+- [CONTRIBUTING.md](CONTRIBUTING.md): the development setup, the checks, and the release procedure.
+
 ## Changes since 0.3
 
 Version 0.4.0, the release after 0.3.1, removes `sportybet_payload`, the `nairabetDNB` key, the `python -m NaijaBet_Api` entry point, `NaijaBet_Api.utils.logger`, and the empty `NaijaBet_Api.schema` package; `session_type` is still accepted by the constructor and ignored (a `DeprecationWarning` is emitted). A failed fetch raises a typed exception; the empty-list signal of 0.3 is gone. The changelog carries the detail per version.
