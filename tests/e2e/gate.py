@@ -1,4 +1,8 @@
-"""The one assertion the live gate makes: a bookmaker returns rows and nothing blocked it."""
+"""The one assertion the live gate makes: a bookmaker returns rows and nothing blocked it.
+
+The suite runs under the ``live_site`` marker from a Nigerian egress; ``LIVE_EXPECT`` narrows the
+bookmakers that can fail the run.
+"""
 
 from __future__ import annotations
 
