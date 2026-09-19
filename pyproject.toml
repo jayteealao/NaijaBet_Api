@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 # Added by the release-pipeline build — plan v1, 2026-09-13
 [project]
 name = "NaijaBet_Api"
-version = "0.3.1"
+version = "0.4.0"
 description = "A wrapper around the API of Nigeria's major betting sites"
 readme = "README.md"
 license = { file = "LICENSE" }
