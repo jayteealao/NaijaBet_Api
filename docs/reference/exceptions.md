@@ -1,6 +1,6 @@
 # Exceptions
 
-Every fetch method of a bookmaker (`get_league`, `get_all`, `get_team`, `async_get_league`, `async_get_all`) returns a list of rows or raises one of the classes below. An empty list means the bookmaker answered with zero fixtures for that league; it never means a failure. All classes live in `NaijaBet_Api.exceptions` and are re-exported from the `NaijaBet_Api` package.
+Every fetch method of a bookmaker (`get_league`, `get_all`, `get_team`, `async_get_league`, `async_get_all`) returns a list of rows or raises one of the classes below. For `BetkingPlaywright`, this holds for every league request; only the browser start can raise a raw Playwright error instead. An empty list means the bookmaker answered with zero fixtures for that league; it never means a failure. All classes live in `NaijaBet_Api.exceptions` and are re-exported from the `NaijaBet_Api` package.
 
 `get_all` and `async_get_all` fetch the ten leagues and record each failed league in `bookmaker.errors`, a `dict[Betid, NaijaBetError]`. They raise only when every league failed. After a call, read `bookmaker.errors` to see which leagues failed and why.
 
