@@ -9,7 +9,9 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (vX.Y.Z); must exist'
+        description: >-
+          Tag to release (vX.Y.Z); must exist. The live gate runs at the ref this
+          dispatch is started from, so start it from a ref whose HEAD is the tag commit.
         required: true
         type: string
       live-run-json:
@@ -43,6 +45,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          ref: ${{ env.RELEASE_TAG }}
       - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           enable-cache: true
