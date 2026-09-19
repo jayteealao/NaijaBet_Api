@@ -56,6 +56,10 @@ def pytest_sessionfinish(session, exitstatus):
     front so that failure lands in the record instead of aborting the hook with no record written.
     ``scripts/check_live_run.py`` treats a present-but-narrow ``expected`` list as a rejection, so
     an empty list here (paired with the ``expected-error`` detail) is rejected the same clean way.
+
+    ``egress()`` can likewise raise (the lookup service is unreachable, the tunnel is down); that
+    failure is resolved up front too, so the record is still written with ``egress: null`` and an
+    ``egress-error`` detail. ``scripts/check_live_run.py`` rejects such a record.
     """
     path = session.config.getoption("--live-record")
     if path is None:
@@ -66,9 +70,15 @@ def pytest_sessionfinish(session, exitstatus):
     except ValueError as exc:
         expected = []
         expected_error = str(exc)
+    try:
+        egress_value = egress()
+        egress_error = None
+    except Exception as exc:  # noqa: BLE001 - any failure must still leave a record behind
+        egress_value = None
+        egress_error = str(exc)
     record = {
         "ran-at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "egress": egress(),
+        "egress": egress_value,
         "bookmakers": dict(session.config.stash.get(COUNTS, {})),
         "bookmakers-async": dict(session.config.stash.get(ASYNC_COUNTS, {})),
         "expected": expected,
@@ -81,6 +91,8 @@ def pytest_sessionfinish(session, exitstatus):
     }
     if expected_error is not None:
         record["expected-error"] = expected_error
+    if egress_error is not None:
+        record["egress-error"] = egress_error
     Path(path).write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
 
 

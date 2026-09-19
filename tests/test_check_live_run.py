@@ -46,6 +46,31 @@ def test_one_minute_ago_record_is_accepted():
     assert check(record(1 / 1440), NOW) is None
 
 
+def test_non_ng_egress_is_rejected():
+    reason = check(record(1, egress={"ip": "1.2.3.4", "city": "London", "country": "GB", "org": "Some ISP"}), NOW)
+
+    assert reason == "egress.country is 'GB'; the override needs a Nigerian egress"
+
+
+def test_missing_egress_is_rejected():
+    rec = record(1)
+    del rec["egress"]
+
+    assert check(rec, NOW) == "egress is missing"
+
+
+def test_proxied_run_is_rejected():
+    reason = check(record(1, **{"proxy-in-use": True}), NOW)
+
+    assert reason == "proxy-in-use is true; a proxied run cannot serve as the release override"
+
+
+def test_egress_error_record_is_rejected():
+    reason = check(record(1, egress=None, **{"egress-error": "ipinfo unreachable"}), NOW)
+
+    assert reason == "egress-error 'ipinfo unreachable'; the run could not prove its egress"
+
+
 def test_narrowed_expected_is_rejected_and_named():
     reason = check(record(1, expected=["betking", "nairabet"]), NOW)
 
