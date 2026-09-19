@@ -37,3 +37,17 @@ def test_mistyped_live_expect_still_writes_a_record(tmp_path, monkeypatch):
     assert "not-a-real-bookmaker" in record["expected-error"]
     assert record["bookmakers"] == {}
     assert record["passed"] is True
+
+
+def test_egress_failure_still_writes_a_record(tmp_path, monkeypatch):
+    def boom():
+        raise RuntimeError("ipinfo unreachable")
+
+    monkeypatch.setattr(conftest, "egress", boom)
+    record_path = tmp_path / "live-run.json"
+
+    conftest.pytest_sessionfinish(_StubSession(record_path), 0)
+
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    assert record["egress"] is None
+    assert record["egress-error"] == "ipinfo unreachable"

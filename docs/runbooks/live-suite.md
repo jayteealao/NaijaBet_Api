@@ -88,10 +88,13 @@ Conditions the workflow enforces (`scripts/check_live_run.py`):
 
 - `ran-at` is at most 7 days old, carries a timezone, and is not in the future;
 - `bookmakers` has an integer above zero for `bet9ja`, `betking`, and `nairabet`;
+- the record carries no `egress-error`;
+- `egress.country` is `NG`;
+- `proxy-in-use` is not `true`; a record from `make live-proxy` is therefore rejected;
 - `passed` is `true`;
 - `git-sha` is present;
 - `git-sha` equals the commit of the released tag;
-- when the record carries an `expected` list, it names all three bookmakers; a record from `make live-proxy` is therefore rejected.
+- when the record carries an `expected` list, it names all three bookmakers.
 
 1. Run `make live` from Lagos and check the record (previous section).
 2. Confirm the tag exists on `origin`: `git ls-remote --tags origin vX.Y.Z` prints one line.

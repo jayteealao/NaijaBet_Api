@@ -2,11 +2,13 @@
 
 Usage: ``python scripts/check_live_run.py live-run.json [expected-git-sha]`` or ``... -`` to
 read stdin. Exit 0 when the record is at most 7 days old, names all three bookmakers with row
-counts above zero, was not narrowed through ``LIVE_EXPECT`` (its ``expected`` list, when present,
-covers all three), records a passing run, and carries the git sha; exit 1 with the first
-failing reason. When ``expected-git-sha`` is given, the record's ``git-sha`` must also match it
-(a full match, or a prefix match when one of the two is a short sha of at least 7 characters);
-without it, only the presence of ``git-sha`` is checked.
+counts above zero, carries no ``egress-error`` and a Nigerian egress (``egress.country ==
+"NG"``), was not run through a proxy (``proxy-in-use`` is not true), was not narrowed through
+``LIVE_EXPECT`` (its ``expected`` list, when present, covers all three), records a passing run,
+and carries the git sha; exit 1 with the first failing reason. When ``expected-git-sha`` is
+given, the record's ``git-sha`` must also match it (a full match, or a prefix match when one of
+the two is a short sha of at least 7 characters); without it, only the presence of ``git-sha``
+is checked.
 """
 
 from __future__ import annotations
@@ -52,6 +54,16 @@ def check(record: dict, now: datetime, expected_sha: str | None = None) -> str |
             return f"bookmakers lacks {name}"
         if not isinstance(count, int) or isinstance(count, bool) or count <= 0:
             return f"bookmakers.{name} is {count!r}; an integer above zero is required"
+    if "egress-error" in record:
+        return f"egress-error {record['egress-error']!r}; the run could not prove its egress"
+    egress = record.get("egress")
+    if not isinstance(egress, dict):
+        return "egress is missing"
+    country = egress.get("country")
+    if country != "NG":
+        return f"egress.country is {country!r}; the override needs a Nigerian egress"
+    if record.get("proxy-in-use") is True:
+        return "proxy-in-use is true; a proxied run cannot serve as the release override"
     expected = record.get("expected")
     if expected is not None:
         if not isinstance(expected, list):
