@@ -79,6 +79,9 @@ jobs:
           LIVE_RUN_JSON: ${{ inputs.live-run-json }}
         run: printf '%s' "$LIVE_RUN_JSON" | python3 scripts/check_live_run.py - "$(git rev-parse HEAD)"
 
+  # check-override is skipped on a tag push, so every job downstream of build needs
+  # !cancelled() plus an explicit result test on each job it needs; the default
+  # success() is false when any job in the needs chain was skipped.
   build:
     needs: [test, live, check-override]
     if: >-
@@ -124,7 +127,10 @@ jobs:
   # Activate with: gh variable set SDLC_GATE_TEST_PYPI_PUBLISH --body true
   publish-test-pypi:
     needs: build
-    if: ${{ vars.SDLC_GATE_TEST_PYPI_PUBLISH == 'true' }}
+    if: >-
+      ${{ !cancelled()
+          && needs.build.result == 'success'
+          && vars.SDLC_GATE_TEST_PYPI_PUBLISH == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: test-pypi
@@ -143,7 +149,10 @@ jobs:
 
   verify-test-pypi:
     needs: [build, publish-test-pypi]
-    if: ${{ needs.publish-test-pypi.result == 'success' }}
+    if: >-
+      ${{ !cancelled()
+          && needs.build.result == 'success'
+          && needs.publish-test-pypi.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -248,7 +257,11 @@ jobs:
 
   post-publish:
     needs: [build, publish-pypi, github-release]
-    if: ${{ needs.publish-pypi.result == 'success' }}
+    if: >-
+      ${{ !cancelled()
+          && needs.build.result == 'success'
+          && needs.publish-pypi.result == 'success'
+          && needs.github-release.result == 'success' }}
     runs-on: ubuntu-latest
     # 5 min propagation wait + three 30 min polling checks, plus headroom.
     timeout-minutes: 100
